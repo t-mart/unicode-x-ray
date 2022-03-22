@@ -1,0 +1,12 @@
+{
+  "extends": "@tsconfig/node17/tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "module": "es2022",
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  },
+  "ts-node": {
+    "esm": true,
+  },
+}
