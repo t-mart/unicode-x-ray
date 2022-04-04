@@ -25,7 +25,7 @@
     "importsNotUsedAsValues": "error",
     "checkJs": true,
   },
-  "include": ["../src/**/*.ts", "./generate.ts"],
+  "include": ["../src/**/*.ts", "./**/*.ts"],
   "ts-node": {
     "esm": true,
   }

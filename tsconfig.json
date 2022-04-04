@@ -16,5 +16,5 @@
     "noUnusedParameters": true,
     "importsNotUsedAsValues": "error",
     "checkJs": true,
-  },
+  }
 }
