@@ -7,7 +7,7 @@ import JSZip from 'jszip';
 import fxp from 'fast-xml-parser';
 
 // can't seem to get this to work without the ".js". something in tsconfig?
-import type { CharacterNameEntry } from '../src/lib/types.js';
+// import type { CharacterNameEntry } from '../src/lib/types.js';
 // import { createTrie } from '../src/lib/trie.js';
 
 // we're running this as an ESM, so we need to shim these in
@@ -17,6 +17,7 @@ const __dirname = dirname(__filename);
 
 const UCD_ZIP_URL = 'https://www.unicode.org/Public/14.0.0/ucdxml/ucd.all.flat.zip';
 const EMOJI_TEST_URL = 'https://www.unicode.org/Public/emoji/14.0/emoji-test.txt';
+const GRAPHEME_BREAK_PROPERTY_URL = 'https://www.unicode.org/Public/14.0.0/ucd/auxiliary/GraphemeBreakProperty.txt';
 const EMOJI_SEQUENCE_PATTERN =
   /^(([0-9ABCDEF]{4,6})( [0-9ABCDEF]{4,6})*) *; \S+ *# [^ ]+ E\d+(?:\.\d+) (.+)$/gmu;
 const UCD_XML_FILE_NAME = 'ucd.all.flat.xml';
@@ -136,7 +137,7 @@ async function parseUCDXML(): Promise<UCDXML> {
  * @param charAttributesArray An array of UCDChar objects
  * @returns An array of Character objects
  */
-function getCharacterNameEntries(charAttributesArray: UCDChar[]): CharacterNameEntry[] {
+function getCharacterNameEntries(charAttributesArray: UCDChar[]): [string, string][] {
   return (
     charAttributesArray
       .map((ucdChar) => {
@@ -194,7 +195,7 @@ function getCharacterNameEntries(charAttributesArray: UCDChar[]): CharacterNameE
           name = `${name} (${attributes.kDefinition})`;
         }
 
-        return [codepoint, name] as CharacterNameEntry; // TODO: must we cast?
+        return [String.fromCodePoint(codepoint), name] as [string, string]; // TODO: must we cast?
       })
       // convince typescript that we're not bringing any falsy values by flat-mapping, which always
       // produces an object (an array), but it won't have an element if the item is falsy. this is
@@ -236,7 +237,7 @@ function getStandardizedVariants(variants: UCDStandardizedVariant[]): [string, s
  * @param charAttributesArray An array of UCDChar objects
  * @returns An array of Character objects
  */
-function getCombiningSet(charAttributesArray: UCDChar[]): number[] {
+function getCombiningSet(charAttributesArray: UCDChar[]): string[] {
   return (
     charAttributesArray
       .map((ucdChar) => {
@@ -251,7 +252,7 @@ function getCombiningSet(charAttributesArray: UCDChar[]): number[] {
 
         const isCombining = attributes.ccc !== '0';
         if (isCombining) {
-          return codepoint;
+          return String.fromCodePoint(codepoint);
         }
         return;
       })
@@ -293,40 +294,37 @@ async function getEmojiTestSequences(): Promise<[string, string][]> {
 // UCD XML stuff
 // =============
 const ucdXML = await parseUCDXML();
+console.log(`Parsed XML`);
 
 const xmlChars = ucdXML.ucd.repertoire.char;
-console.log(`Parsed XML and got ${xmlChars.length} characters`);
 
-// named
+// names
 const characterEntries = getCharacterNameEntries(xmlChars);
 fs.writeFileSync(NAMES_OUTPUT_PATH, JSON.stringify(characterEntries));
-console.log(`Wrote character names to ${NAMES_OUTPUT_PATH}`);
+console.log(`Wrote ${characterEntries.length} character names to ${NAMES_OUTPUT_PATH}`);
 
 // combiners
 const combiningSet = getCombiningSet(xmlChars);
 fs.writeFileSync(COMBINING_OUTPUT_PATH, JSON.stringify(combiningSet));
-console.log(`Wrote combining characters to ${COMBINING_OUTPUT_PATH}`);
+console.log(`Wrote ${combiningSet.length} combining characters to ${COMBINING_OUTPUT_PATH}`);
 
 // named sequences
 const namedSequences = getNamedSequences(ucdXML.ucd['named-sequences']['named-sequence']);
-// const namedSequencesTrie = createTrie(namedSequences);
-console.log(`Made trie for ${namedSequences.length} named sequences`);
 fs.writeFileSync(NAMED_SEQUENCES_OUTPUT_PATH, JSON.stringify(namedSequences));
-console.log(`Wrote combining characters to ${NAMED_SEQUENCES_OUTPUT_PATH}`);
+console.log(`Wrote ${namedSequences.length} named sequences to ${NAMED_SEQUENCES_OUTPUT_PATH}`);
 
 // standardized variants
 const standardizedVariants = getStandardizedVariants(
   ucdXML.ucd['standardized-variants']['standardized-variant']
 );
-// const standardizedVariantsTrie = createTrie(standardizedVariants);
-console.log(`Made trie for ${standardizedVariants.length} named sequences`);
 fs.writeFileSync(STANDARDIZED_VARIANTS_OUTPUT_PATH, JSON.stringify(standardizedVariants));
-console.log(`Wrote combining characters to ${STANDARDIZED_VARIANTS_OUTPUT_PATH}`);
+console.log(
+  `Wrote ${standardizedVariants.length} standardized variants to` +
+    ` ${STANDARDIZED_VARIANTS_OUTPUT_PATH}`
+);
 
 // Emoji stuff (sequences of them)
 // ===============================
 const emojiSequences = await getEmojiTestSequences();
-// const emojiSequencesTrie = createTrie(emojiSequences);
-console.log(`Made trie for ${emojiSequences.length} emoji sequences`);
 fs.writeFileSync(EMOJI_SEQUENCES_OUTPUT_PATH, JSON.stringify(emojiSequences));
-console.log(`Wrote combining characters to ${EMOJI_SEQUENCES_OUTPUT_PATH}`);
+console.log(`Wrote ${emojiSequences.length} emoji sequences to ${EMOJI_SEQUENCES_OUTPUT_PATH}`);
