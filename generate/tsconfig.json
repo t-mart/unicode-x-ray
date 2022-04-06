@@ -23,10 +23,10 @@
     "noUnusedParameters": true,
 
     "importsNotUsedAsValues": "error",
-    "checkJs": true,
+    "checkJs": true
   },
   "include": ["../src/**/*.ts", "./**/*.ts"],
   "ts-node": {
-    "esm": true,
+    "esm": true
   }
 }

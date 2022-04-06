@@ -1,3 +1,5 @@
+// generate names for unicode characters
+// most of the time, the names are the normative names, but other times, i pick and choose stuff
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -6,32 +8,28 @@ import axios from 'axios';
 import JSZip from 'jszip';
 import fxp from 'fast-xml-parser';
 
-// can't seem to get this to work without the ".js". something in tsconfig?
-// import type { CharacterNameEntry } from '../src/lib/types.js';
-// import { createTrie } from '../src/lib/trie.js';
-
 // we're running this as an ESM, so we need to shim these in
 // https://stackoverflow.com/a/64383997/235992
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const UCD_ZIP_URL = 'https://www.unicode.org/Public/14.0.0/ucdxml/ucd.all.flat.zip';
-const EMOJI_TEST_URL = 'https://www.unicode.org/Public/emoji/14.0/emoji-test.txt';
-const GRAPHEME_BREAK_PROPERTY_URL = 'https://www.unicode.org/Public/14.0.0/ucd/auxiliary/GraphemeBreakProperty.txt';
-const EMOJI_SEQUENCE_PATTERN =
-  /^(([0-9ABCDEF]{4,6})( [0-9ABCDEF]{4,6})*) *; \S+ *# [^ ]+ E\d+(?:\.\d+) (.+)$/gmu;
 const UCD_XML_FILE_NAME = 'ucd.all.flat.xml';
 const NAMES_OUTPUT_PATH = join(__dirname, '../static/names.json');
-const COMBINING_OUTPUT_PATH = join(__dirname, '../static/combining.json');
-const EMOJI_SEQUENCES_OUTPUT_PATH = join(__dirname, '../static/emoji-sequences.json');
-const NAMED_SEQUENCES_OUTPUT_PATH = join(__dirname, '../static/named-sequences.json');
-const STANDARDIZED_VARIANTS_OUTPUT_PATH = join(__dirname, '../static/standardized-variants.json');
 
 // CAREFUL about changing this. some interfaces fields below are coupled to this.
 const XML_PARSER_OPTIONS: Partial<fxp.X2jOptions> = {
   ignoreAttributes: false, // we want the attributes fo sho
   attributesGroupName: 'attributes', // put all attributes under a property with this name
   attributeNamePrefix: '' // and don't give the attributes a prefix
+};
+
+type UCDXML = {
+  ucd: {
+    repertoire: {
+      char: UCDChar[];
+    };
+  };
 };
 
 type UCDChar = {
@@ -63,46 +61,6 @@ type UCDCharNameAliasAttributes = {
   alias: string;
   type: string;
 };
-
-type UCDNamedSequenceAttributes = {
-  name: string;
-  cps: string;
-};
-
-type UCDNamedSequence = {
-  attributes: UCDNamedSequenceAttributes;
-};
-
-type UCDStandardizedVariantAttributes = {
-  desc: string;
-  cps: string;
-};
-
-type UCDStandardizedVariant = {
-  attributes: UCDStandardizedVariantAttributes;
-};
-
-type UCDXML = {
-  ucd: {
-    repertoire: {
-      char: UCDChar[];
-    };
-    'named-sequences': {
-      'named-sequence': UCDNamedSequence[];
-    };
-    'standardized-variants': {
-      'standardized-variant': UCDStandardizedVariant[];
-    };
-  };
-};
-
-/**
- * Split a string like "0B95 0BCD 0BB7 0BCD" into its constituent codepoints (as number objects)
- * @returns An Array of codepoint numbers
- */
-function splitCodepointsString(seq: string): number[] {
-  return seq.split(' ').map((codepointHex) => parseInt(codepointHex, 16));
-}
 
 /**
  * In memory, HTTP GET the UCD (UniCode Data) zip, extract the XML file, and parse it into a JS
@@ -137,10 +95,10 @@ async function parseUCDXML(): Promise<UCDXML> {
  * @param charAttributesArray An array of UCDChar objects
  * @returns An array of Character objects
  */
-function getCharacterNameEntries(charAttributesArray: UCDChar[]): [string, string][] {
+function getCharacterNameEntries(charAttributesArray: UCDChar[]): [number, string][] {
   return (
     charAttributesArray
-      .map((ucdChar) => {
+      .map<[number, string] | undefined>((ucdChar) => {
         const attributes = ucdChar.attributes;
         const codepointHex = attributes.cp;
         if (!codepointHex) {
@@ -195,136 +153,23 @@ function getCharacterNameEntries(charAttributesArray: UCDChar[]): [string, strin
           name = `${name} (${attributes.kDefinition})`;
         }
 
-        return [String.fromCodePoint(codepoint), name] as [string, string]; // TODO: must we cast?
+        return [codepoint, name];
       })
       // convince typescript that we're not bringing any falsy values by flat-mapping, which always
       // produces an object (an array), but it won't have an element if the item is falsy. this is
       // better than filter(), which typescript has more trouble introspecting.
       // https://stackoverflow.com/a/59726888/235992
-      // .filter(i => i) // <-- doesn't work
-      .flatMap((i) => (i ? [i] : [])) // does work
+      // .filter(c => c) // <-- doesn't work
+      .flatMap((c) => (c ? [c] : [])) // <-- does work
   );
 }
 
-/**
- * @param namedSequences An Array of named sequences
- * @returns An array of tuples of [codepoints, named sequence name]
- */
-function getNamedSequences(namedSequences: UCDNamedSequence[]): [string, string][] {
-  return namedSequences
-    .map((namedSequence) => namedSequence.attributes)
-    .map((namedSequenceAttributes) => [
-      String.fromCodePoint(...splitCodepointsString(namedSequenceAttributes.cps)),
-      namedSequenceAttributes.name
-    ]);
-}
-
-/**
- * @param variants An Array of named sequences
- * @returns An array of tuples of [codepoints, standardized variant description]
- */
-function getStandardizedVariants(variants: UCDStandardizedVariant[]): [string, string][] {
-  return variants
-    .map((variant) => variant.attributes)
-    .map((variantAttributes) => [
-      String.fromCodePoint(...splitCodepointsString(variantAttributes.cps)),
-      variantAttributes.desc
-    ]);
-}
-
-/**
- * Transform UCDChar objects into Character objects
- * @param charAttributesArray An array of UCDChar objects
- * @returns An array of Character objects
- */
-function getCombiningSet(charAttributesArray: UCDChar[]): string[] {
-  return (
-    charAttributesArray
-      .map((ucdChar) => {
-        const attributes = ucdChar.attributes;
-        const codepointHex = attributes.cp;
-        if (!codepointHex) {
-          // private use areas won't have a cp (codepoint), but instead a "first-cp"/"last-cp". we don't
-          // want these anyway (they're not really characters?), so lack of this key tells us to skip.
-          return;
-        }
-        const codepoint = parseInt(codepointHex, 16);
-
-        const isCombining = attributes.ccc !== '0';
-        if (isCombining) {
-          return String.fromCodePoint(codepoint);
-        }
-        return;
-      })
-      // convince typescript that we're not bringing any falsy values by flat-mapping, which always
-      // produces an object (an array), but it won't have an element if the item is falsy. this is
-      // better than filter(), which typescript has more trouble introspecting.
-      // https://stackoverflow.com/a/59726888/235992
-      // .filter(i => i) // <-- doesn't work
-      .flatMap((i) => (i ? [i] : [])) // does work
-  );
-}
-
-/**
- * Return an array of tuples of [emoji codepoints sequence, emoji name] where there are 2 or more
- * characters in the sequence.
- * @returns A promise of that stuff ^^
- */
-async function getEmojiTestSequences(): Promise<[string, string][]> {
-  return axios
-    .get(EMOJI_TEST_URL, {
-      responseType: 'text'
-    })
-    .then((response: { data: string }) => {
-      console.log(`Downloaded ${EMOJI_TEST_URL}`);
-
-      return Array.from(response.data.matchAll(EMOJI_SEQUENCE_PATTERN))
-        .map((match) => [match[1], match[4]] as [string, string])
-        .map(
-          ([codepointSequence, name]) =>
-            [String.fromCodePoint(...splitCodepointsString(codepointSequence)), name] as [
-              string,
-              string
-            ]
-        )
-        .filter((pair) => pair[0].length > 1);
-    });
-}
-
-// UCD XML stuff
-// =============
-const ucdXML = await parseUCDXML();
-console.log(`Parsed XML`);
-
-const xmlChars = ucdXML.ucd.repertoire.char;
-
-// names
-const characterEntries = getCharacterNameEntries(xmlChars);
-fs.writeFileSync(NAMES_OUTPUT_PATH, JSON.stringify(characterEntries));
-console.log(`Wrote ${characterEntries.length} character names to ${NAMES_OUTPUT_PATH}`);
-
-// combiners
-const combiningSet = getCombiningSet(xmlChars);
-fs.writeFileSync(COMBINING_OUTPUT_PATH, JSON.stringify(combiningSet));
-console.log(`Wrote ${combiningSet.length} combining characters to ${COMBINING_OUTPUT_PATH}`);
-
-// named sequences
-const namedSequences = getNamedSequences(ucdXML.ucd['named-sequences']['named-sequence']);
-fs.writeFileSync(NAMED_SEQUENCES_OUTPUT_PATH, JSON.stringify(namedSequences));
-console.log(`Wrote ${namedSequences.length} named sequences to ${NAMED_SEQUENCES_OUTPUT_PATH}`);
-
-// standardized variants
-const standardizedVariants = getStandardizedVariants(
-  ucdXML.ucd['standardized-variants']['standardized-variant']
-);
-fs.writeFileSync(STANDARDIZED_VARIANTS_OUTPUT_PATH, JSON.stringify(standardizedVariants));
-console.log(
-  `Wrote ${standardizedVariants.length} standardized variants to` +
-    ` ${STANDARDIZED_VARIANTS_OUTPUT_PATH}`
-);
-
-// Emoji stuff (sequences of them)
-// ===============================
-const emojiSequences = await getEmojiTestSequences();
-fs.writeFileSync(EMOJI_SEQUENCES_OUTPUT_PATH, JSON.stringify(emojiSequences));
-console.log(`Wrote ${emojiSequences.length} emoji sequences to ${EMOJI_SEQUENCES_OUTPUT_PATH}`);
+await parseUCDXML()
+  .then((ucdXML) => {
+    console.log('Parsed UCD XML');
+    return getCharacterNameEntries(ucdXML.ucd.repertoire.char);
+  })
+  .then((charNameEntries) => {
+    fs.writeFileSync(NAMES_OUTPUT_PATH, JSON.stringify(charNameEntries));
+    console.log(`Wrote ${charNameEntries.length} character names to ${NAMES_OUTPUT_PATH}`);
+  });
