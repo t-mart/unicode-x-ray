@@ -43,6 +43,8 @@
   },
   "type": "module",
   "dependencies": {
+    "@tailwindcss/forms": "^0.5.0",
+    "@tailwindcss/line-clamp": "^0.3.1",
     "grapheme-iterator": "^1.0.0",
     "graphemesplit": "^2.4.4"
   }

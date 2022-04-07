@@ -2,40 +2,33 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Loading from '../lib/loading.svelte';
   import graphemeSplit from 'graphemesplit';
+
   import { Character } from '$lib/character';
+  import Loading from '$lib/loading.svelte';
+  import Input from '$lib/input.svelte';
+  import type { NormalizationForm } from '$lib/types';
 
-  // example chinese
-  // 您的浏览器属于无痕浏览模式，无法进行正常配置，请您将您的浏览器切换成非无痕浏览模式再进行登录
 
-  // example zalgo
-  // Ë̸͇́x̴̗̾a̴̘͗ḿ̸̨p̸̮̃l̵͙͌ë̸͓́
-
-  const normalizationFormOptions = {
-    None: undefined,
-    NFC: 'NFC',
-    NFD: 'NFD',
-    NFKC: 'NFKC',
-    NFKD: 'NFKD'
-  };
-
-  let normalizationForm: 'NFC' | 'NFD' | 'NFKC' | 'NFKD' | undefined = undefined;
+  // test input
+  // ÇÅ㴴Z̸̢̨̡̡̢̛̛̛̮̘̦̯̹̬͈͍̠͚͕̯̫̖̟͍͈̦͇͙̜͖̮͔̲̦̥͚̖͓̣͎͉̫͛̽͑̔̈̂̐̔͂͗̆̑̈́̓̍͌̈́̑͗̓̋̇̕͜͜͝͝ͅ👩🏻‍❤️‍💋‍👨🏾
 
   let text = $page.url.searchParams.get('t') || '';
+  let normalizationForm: NormalizationForm;
+  $: graphemes = getGraphemes(text, normalizationForm);
 
-  let graphemes: string[] = [];
-
-  function xRay() {
-    let normalized = text;
+  function getGraphemes(text: string, normalizationForm: NormalizationForm) {
+    let normalized;
     if (normalizationForm !== undefined) {
-      normalized = normalized.normalize(normalizationForm);
+      normalized = text.normalize(normalizationForm);
+    } else {
+      normalized = text;
     }
-    graphemes = graphemeSplit(normalized);
+    return graphemeSplit(normalized);
   }
 
-
   let names: Map<number, string> = new Map();
+  let isLoading = true;
 
   onMount(async () => {
     fetch('/names.json')
@@ -44,8 +37,7 @@
         for (const [codepointStr, name] of data) {
           names.set(Number.parseInt(codepointStr), name);
         }
-        names = names; // so svelte sees it.
-        xRay();
+        isLoading = false;
       });
   });
 </script>
@@ -54,43 +46,35 @@
   <title>Unicode X-Ray</title>
 </svelte:head>
 
-<h1 class="text-2xl my-2">Unicode X-Ray</h1>
+<h1 class="text-4xl my-2">Unicode X-Ray</h1>
 
-{#if names.size == 0}
+{#if isLoading}
   <Loading />
 {:else}
-  <div class="flex flex-row">
-    <input
-      bind:value={text}
-      on:input={xRay}
-      class="ring-2 rounded my-2 w-full text-4xl"
-      placeholder="Enter some text..."
-    />
-    <select
-      bind:value={normalizationForm}
-      on:change={xRay}
-      class="ring-2 rounded my-2 text-4xl"
-    >
-      {#each Object.entries(normalizationFormOptions) as nfo}
-        <option value={nfo[1]}>
-          {nfo[0]}
-        </option>
-      {/each}
-    </select>
-  </div>
-  <ol class="flex flex-col gap-4 my-2">
+  <Input bind:text bind:normalizationForm />
+  <ol class="flex flex-col gap-2">
     {#each graphemes as grapheme}
       <ol class="flex gap-2">
-        <li class="flex flex-col items-center place-content-center text-6xl w-36">{grapheme}</li>
-        {#each Array.from(grapheme).map((character) => Character.fromString(character)) as char}
-          <li class="border-2 flex flex-col items-center place-content-center w-36">
-            <span class="text-center font-mono">{char.toFormattedCodepoint()}</span>
-            <span class="text-6xl p-4">{char.toFormattedString()}</span>
-            <span class="text-center font-mono text-ellipsis overflow-hidden">
-              {names.get(char.codepoint)}
-            </span>
-          </li>
-        {/each}
+        <li class="flex text-6xl w-32 h-32 truncate min-w-32 max-w-full justify-center items-center shrink-0">
+            {grapheme}
+        </li>
+        <li class="overflow-auto">
+          <ol class="flex gap-2">
+            {#each Array.from(grapheme).map((character) => Character.fromString(character)) as char}
+            <li class="border-2 border-dashed flex flex-col w-32 h-32 justify-evenly items-center shrink-0">
+              <span class="font-mono">{char.toFormattedCodepoint()}</span>
+              <span class="text-4xl">{char.toFormattedString()}</span>
+              <span
+                title={names.get(char.codepoint)}
+                class="text-xs line-clamp-3 min-w-32 max-w-full text-center underline decoration-dotted"
+              >
+                {names.get(char.codepoint)}
+              </span>
+            </li>
+          {/each}
+          </ol>
+        </li>
+
       </ol>
     {/each}
   </ol>

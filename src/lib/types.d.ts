@@ -1,0 +1,1 @@
+export type NormalizationForm = 'NFC' | 'NFD' | 'NFKC' | 'NFKD' | undefined;
