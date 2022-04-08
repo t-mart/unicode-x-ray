@@ -9,9 +9,7 @@ module.exports = {
     extend: {
       colors: {
         accent: '#0076d6',
-        hover: '#005ea2',
-        border: '#757575',
-        button: '#e5e7eb',
+        'accent-dark': '#005ea2',
         'button-hover': '#adadad',
         'button-active': '#757575',
       },

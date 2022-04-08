@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { fade } from 'svelte/transition';
+  import { fly } from 'svelte/transition';
 
   import { UnicodeXRayUrl } from '$lib/urlparams';
   import { NORMALIZATION_FORMS } from '$lib/normforms';
@@ -15,15 +15,16 @@
 
   async function copy() {
     const copyURL = new UnicodeXRayUrl(text, normalizationForm).toURL($page.url).toString();
-    await navigator.clipboard.writeText(copyURL);
-    console.log(`copied ${copyURL}`);
-    if (!showCopyToast) {
-      showCopyToast = true;
+    await navigator.clipboard.writeText(copyURL).then(() => {
+      console.log(`copied ${copyURL}`);
+      if (!showCopyToast) {
+        showCopyToast = true;
 
-      setTimeout(() => {
-        showCopyToast = false;
-      }, showDurationMs);
-    }
+        setTimeout(() => {
+          showCopyToast = false;
+        }, showDurationMs);
+      }
+    });
   }
 </script>
 
@@ -33,8 +34,8 @@
   lg:grid-flow-col
   lg:grid-cols-input-layout
   lg:grid-rows-input-layout
-  gap-y-1
-  gap-x-4
+  lg:gap-x-4
+  gap-y-2
   my-2"
 >
   <label for="text" class="">Text</label>
@@ -42,13 +43,16 @@
     bind:value={text}
     type="text"
     id="text"
-    class="form-input text-4xl grow p-2"
+    class="form-input text-4xl grow p-2 placeholder:italic placeholder:text-border"
     placeholder="Enter some text..."
   />
 
   <div class="flex gap-1">
     <label for="normalization" class=""> Normalization </label>
-    <a href="https://unicode.org/reports/tr15/" class="link text-xs align-super whitespace-nowrap">
+    <a
+      href="https://unicode.org/reports/tr15/#Introduction"
+      class="link text-xs align-super whitespace-nowrap"
+    >
       what's this?
     </a>
   </div>
@@ -62,7 +66,11 @@
   </select>
 
   <button
-    class="lg:row-start-2 place-self-stretch whitespace-nowrap button h-full w-full p-2"
+    class="lg:row-start-2 place-self-stretch button
+    h-full
+    w-full
+    p-2
+    whitespace-nowrap"
     on:click={() => copy()}
   >
     Copy Link
@@ -71,9 +79,12 @@
 
 {#if showCopyToast}
   <div
-    class="absolute inset-x-0 flex justify-center"
-    transition:fade={{ duration: transitionDurationMs }}
+    class="fixed inset-x-0 flex justify-center"
+    transition:fly={{ duration: transitionDurationMs, y: -100 }}
   >
-    <span class="p-4 bg-green-200 border-2 border-green-400 drop-shadow">Link copied!</span>
+    <span
+      class="p-4 bg-green-200 border-2 border-green-400 dark:bg-green-800 dark:border-green-600 drop-shadow"
+      >Link copied!</span
+    >
   </div>
 {/if}

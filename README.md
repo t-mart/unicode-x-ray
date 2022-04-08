@@ -1,20 +1,13 @@
-# create-svelte
+# Unicode X-Ray
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+**[Live website](https://unicode-x-ray.vercel.app/?t=ÇÅ㴴Z̸̢̨̡̡̢̛̛̛̮̘̦̯̹̬͈͍̠͚͕̯̫̖̟͍͈̦͇͙̜͖̮͔̲̦̥͚̖͓̣͎͉̫͛̽͑̔̈̂̐̔͂͗̆̑̈́̓̍͌̈́̑͗̓̋̇̕͜͜͝͝ͅ👩🏻‍❤️‍💋‍👨🏾)**
 
-## Creating a project
+Take a closer look at Unicode:
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npm init svelte@next
-
-# create a new project in my-app
-npm init svelte@next my-app
-```
-
-> Note: the `@next` is temporary
+- Splits text into [graphemes](https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries), which
+  may be a sequence of codepoints.
+- Displays a name for each character
+- [Normalizes](https://unicode.org/reports/tr15/#Introduction) text into different forms
 
 ## Developing
 
