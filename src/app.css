@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.link {
+  color: theme('colors.accent');
+  text-decoration-line: underline;
+}
+.link:hover {
+  color: theme('colors.hover');
+}
+
+.form-input {
+  border-width: 2px;
+  border-color: theme('colors.border');
+  caret-color: theme('colors.accent');
+}
+
+.form-input::placeholder {
+  color: theme('colors.border');
+  font-style: italic;
+}
+select.form-input {
+  background-color: white;
+}
+
+.button {
+  background-color: theme('colors.button');
+  border-width: 2px;
+  border-color: theme('colors.border');
+}
+.button:hover {
+  background-color: theme('colors.button-hover');
+}
+.button:active {
+  background-color: theme('colors.button-active');
+}
+
+:focus-visible {
+  outline: 2px dashed theme('colors.accent');
+}

@@ -1,46 +1,79 @@
 <script lang="ts">
-  import type { NormalizationForm } from './types';
+  import { page } from '$app/stores';
+  import { fade } from 'svelte/transition';
 
-  const normalizationFormOptions = Object.entries({
-    None: undefined,
-    NFC: 'NFC',
-    NFKC: 'NFKC',
-    NFD: 'NFD',
-    NFKD: 'NFKD'
-  }).map(([text, value]) => ({ text, value }));
+  import { UnicodeXRayUrl } from '$lib/urlparams';
+  import { NORMALIZATION_FORMS } from '$lib/normforms';
+  import type { NormalizationForm } from '$lib/normforms';
 
-  export let normalizationForm: NormalizationForm = undefined;
+  export let normalizationForm: NormalizationForm | undefined = undefined;
   export let text = '';
+
+  let showCopyToast = false;
+  let showDurationMs = 3000;
+  let transitionDurationMs: 500;
+
+  async function copy() {
+    const copyURL = new UnicodeXRayUrl(text, normalizationForm).toURL($page.url).toString();
+    await navigator.clipboard.writeText(copyURL);
+    console.log(`copied ${copyURL}`);
+    if (!showCopyToast) {
+      showCopyToast = true;
+
+      setTimeout(() => {
+        showCopyToast = false;
+      }, showDurationMs);
+    }
+  }
 </script>
 
-<div class="grid grid-cols-5 gap-4 my-2">
-  <div class="col-span-4 flex flex-col">
-    <label for="text">Text</label>
-    <input
-      bind:value={text}
-      type="text"
-      name="text"
-      class="border-2 w-full text-4xl p-1 my-2 grow"
-      placeholder="Enter some text..."
-    />
+<div
+  class="
+  grid
+  lg:grid-flow-col
+  lg:grid-cols-input-layout
+  lg:grid-rows-input-layout
+  gap-y-1
+  gap-x-4
+  my-2"
+>
+  <label for="text" class="">Text</label>
+  <input
+    bind:value={text}
+    type="text"
+    id="text"
+    class="form-input text-4xl grow p-2"
+    placeholder="Enter some text..."
+  />
+
+  <div class="flex gap-1">
+    <label for="normalization" class=""> Normalization </label>
+    <a href="https://unicode.org/reports/tr15/" class="link text-xs align-super whitespace-nowrap">
+      what's this?
+    </a>
   </div>
-  <div class="col-span-1 flex flex-col ">
-    <div class="flex gap-1">
-      <label for="normalization" title="foo" class="">
-        <a href="www.google.com">Normalization</a>
-      </label>
-      <a href="https://unicode.org/reports/tr15/" class="underline text-blue-600">(?)</a>
-    </div>
-    <select
-      name="normalization"
-      bind:value={normalizationForm}
-      class="border-2 text-4xl w-full p-1 my-2 grow"
-    >
-      {#each normalizationFormOptions as option}
-        <option value={option.value}>
-          {option.text}
-        </option>
-      {/each}
-    </select>
-  </div>
+  <select id="normalization" bind:value={normalizationForm} class="form-input text-4xl p-2">
+    <option value={undefined}>None</option>
+    {#each NORMALIZATION_FORMS as option}
+      <option value={option} selected={option === normalizationForm}>
+        {option}
+      </option>
+    {/each}
+  </select>
+
+  <button
+    class="lg:row-start-2 place-self-stretch whitespace-nowrap button h-full w-full p-2"
+    on:click={() => copy()}
+  >
+    Copy Link
+  </button>
 </div>
+
+{#if showCopyToast}
+  <div
+    class="absolute inset-x-0 flex justify-center"
+    transition:fade={{ duration: transitionDurationMs }}
+  >
+    <span class="p-4 bg-green-200 border-2 border-green-400 drop-shadow">Link copied!</span>
+  </div>
+{/if}

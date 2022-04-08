@@ -2,25 +2,28 @@ module.exports = {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
     screens: {
-      sm: '640px',
-      // => @media (min-width: 640px) { ... }
-
-      md: '768px',
-      // => @media (min-width: 768px) { ... }
-
-      lg: '1024px',
-      // => @media (min-width: 1024px) { ... }
-
-      // xl: '1280px',
-      // => @media (min-width: 1280px) { ... }
-
-      // '2xl': '1536px'
-      // => @media (min-width: 1536px) { ... }
+      lg: '800px',
+      xl: '1000px',
+      xxl: '1200px',
     },
-    extend: {}
+    extend: {
+      colors: {
+        accent: '#0076d6',
+        hover: '#005ea2',
+        border: '#757575',
+        button: '#e5e7eb',
+        'button-hover': '#adadad',
+        'button-active': '#757575',
+      },
+      gridTemplateColumns: {
+        'input-layout': '1fr min-content min-content'
+      },
+      gridTemplateRows: {
+        'input-layout': 'repeat(2, min-content)'
+      }
+    }
   },
   plugins: [
-    require('@tailwindcss/line-clamp'),
-    require('@tailwindcss/forms')
+    require('@tailwindcss/line-clamp')
   ]
 };
