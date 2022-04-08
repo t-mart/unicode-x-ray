@@ -87,7 +87,7 @@
     {/each}
   </ol>
   {#if text.length === 0}
-    <div class="italic text-stone-500 text-lg">
+    <div class="italic text-stone-500 text-lg max-w-prose mx-auto">
       Or try some examples:
       <ul class="list-disc list-inside">
         {#each EXAMPLES as example}
