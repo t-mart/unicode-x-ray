@@ -22,8 +22,9 @@ export class UnicodeXRayUrl {
     let normalizationForm;
     if (normalizationFormParam !== null && NORMALIZATION_FORMS.includes(normalizationFormParam as NormalizationForm)) {
       normalizationForm = normalizationFormParam as NormalizationForm;
+    } else {
+      normalizationForm = undefined;
     }
-    normalizationForm = undefined;
 
     return new UnicodeXRayUrl(text, normalizationForm);
   }
