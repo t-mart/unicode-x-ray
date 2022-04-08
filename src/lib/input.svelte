@@ -84,7 +84,7 @@
     transition:fly={{ duration: transitionDurationMs, y: -100 }}
   >
     <span
-      class="p-4 bg-green-200 border-2 border-green-400 dark:bg-green-800 dark:border-green-600 drop-shadow"
+      class="p-4 bg-green-200 border-2 border-green-400 dark:bg-green-800 dark:border-green-600 shadow-lg shadow-stone-300/50 dark:shadow-stone-700/50"
       >Link copied!</span
     >
   </div>
