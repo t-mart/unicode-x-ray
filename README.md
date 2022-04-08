@@ -1,6 +1,6 @@
 # Unicode X-Ray
 
-**[Live website](https://unicode-x-ray.vercel.app/?t=ÇÅ㴴Z̸̢̨̡̡̢̛̛̛̮̘̦̯̹̬͈͍̠͚͕̯̫̖̟͍͈̦͇͙̜͖̮͔̲̦̥͚̖͓̣͎͉̫͛̽͑̔̈̂̐̔͂͗̆̑̈́̓̍͌̈́̑͗̓̋̇̕͜͜͝͝ͅ👩🏻‍❤️‍💋‍👨🏾)**
+**[Live website](https://unicode-x-ray.vercel.app/)**
 
 Take a closer look at Unicode:
 

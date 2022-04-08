@@ -9,7 +9,7 @@
 <div class="container py-4 px-4 mx-0 lg:mx-auto flex flex-col gap-4">
   <h1 class="text-4xl">Unicode X-Ray</h1>
   <slot />
-  <footer class="text-center text-stone-500">
+  <footer class="text-center text-stone-500 mt-20">
     Tim Martin, <a href="https://github.com/t-mart/unicode-x-ray" class="link">source</a>
   </footer>
 </div>

@@ -9,8 +9,13 @@
   import type { NormalizationForm } from '$lib/normforms';
   import { UnicodeXRayUrl } from '$lib/urlparams';
 
-  // test input
-  // ÇÅ㴴Z̸̢̨̡̡̢̛̛̛̮̘̦̯̹̬͈͍̠͚͕̯̫̖̟͍͈̦͇͙̜͖̮͔̲̦̥͚̖͓̣͎͉̫͛̽͑̔̈̂̐̔͂͗̆̑̈́̓̍͌̈́̑͗̓̋̇̕͜͜͝͝ͅ👩🏻‍❤️‍💋‍👨🏾
+  const EXAMPLES = Object.entries({
+    Z̶͕̥̾a̴̪͎͑l̴̡̈́g̷̨̨͑̅ǫ̸̐̂: '"Zalgo" text with combining characters',
+    '👩🏾‍❤️‍👨🏼': 'an emoji sequence',
+    '🇦🇨': 'a regional indicator',
+    㴴각g̈நிक्: 'characters from around the world',
+    ÇℌÅ: 'characters that change under different normalizations'
+  }).map(([text, desc]) => ({ text, desc }));
 
   function getGraphemes(text: string, normalizationForm: NormalizationForm | undefined) {
     let normalized;
@@ -81,4 +86,17 @@
       </ol>
     {/each}
   </ol>
+  {#if text.length === 0}
+    <div class="italic text-stone-500 text-lg">
+      Or try some examples:
+      <ul class="list-disc list-inside">
+        {#each EXAMPLES as example}
+          <li>
+            <button class="link" on:click={() => (text = example.text)}>{example.text}</button>
+            ({example.desc})
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
 {/await}
