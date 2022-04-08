@@ -2,9 +2,9 @@ module.exports = {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
     screens: {
-      lg: '800px',
+      lg: '600px',
       xl: '1000px',
-      xxl: '1200px',
+      xxl: '1400px',
     },
     extend: {
       colors: {
@@ -14,10 +14,11 @@ module.exports = {
         'button-active': '#757575',
       },
       gridTemplateColumns: {
-        'input-layout': '1fr min-content min-content'
+        'wide-input-layout': '1fr min-content min-content',
+        'narrow-input-layout': '1fr',
       },
       gridTemplateRows: {
-        'input-layout': 'repeat(2, min-content)'
+        'wide-input-layout': 'repeat(2, min-content)',
       }
     }
   },

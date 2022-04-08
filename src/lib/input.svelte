@@ -31,9 +31,10 @@
 <div
   class="
   grid
+  grid-cols-narrow-input-layout
   lg:grid-flow-col
-  lg:grid-cols-input-layout
-  lg:grid-rows-input-layout
+  lg:grid-cols-wide-input-layout
+  lg:grid-rows-wide-input-layout
   lg:gap-x-4
   gap-y-2
   my-2"
@@ -43,15 +44,15 @@
     bind:value={text}
     type="text"
     id="text"
-    class="form-input text-4xl grow p-2 placeholder:italic placeholder:text-border"
+    class="form-input text-4xl p-2 placeholder:italic placeholder:text-border w-full"
     placeholder="Enter some text..."
   />
 
-  <div class="flex gap-1">
-    <label for="normalization" class=""> Normalization </label>
+  <div class="whitespace-nowrap">
+    <label for="normalization" class="">Normalization</label>
     <a
       href="https://unicode.org/reports/tr15/#Introduction"
-      class="link text-xs align-super whitespace-nowrap"
+      class="link text-xs align-super"
     >
       what's this?
     </a>
