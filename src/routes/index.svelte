@@ -1,11 +1,13 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import { fade } from 'svelte/transition';
 
   import graphemeSplit from 'graphemesplit';
 
   import { Character } from '$lib/character';
   import Loading from '$lib/loading.svelte';
   import Input from '$lib/input.svelte';
+  import CharacterBox from '$lib/characterbox.svelte';
   import type { NormalizationForm } from '$lib/normforms';
   import { UnicodeXRayUrl } from '$lib/urlparams';
 
@@ -25,10 +27,6 @@
       normalized = text;
     }
     return graphemeSplit(normalized);
-  }
-
-  function getReferenceURL(char: Character) {
-    return `https://www.compart.com/en/unicode/${char.toFormattedCodepoint()}`;
   }
 
   async function getNames() {
@@ -57,28 +55,17 @@
   <Input bind:text bind:normalizationForm />
   <ol class="flex flex-col gap-4">
     {#each graphemes as grapheme}
-      <ol class="flex gap-2">
+      <ol class="flex gap-2" transition:fade="{{duration: 100}}">
         <li
-          class="flex text-6xl w-32 h-32 truncate min-w-32 max-w-full justify-center items-center shrink-0"
+          class="text-6xl flex w-32 justify-center items-center"
         >
           {grapheme}
         </li>
         <li class="overflow-auto">
           <ol class="flex gap-2">
             {#each Array.from(grapheme).map((character) => Character.fromString(character)) as char}
-              <li
-                class="border-2 border-border p-1 flex flex-col w-32 h-32 justify-between items-center shrink-0"
-              >
-                <a class="font-mono link" href={getReferenceURL(char)}
-                  >{char.toFormattedCodepoint()}</a
-                >
-                <span class="text-4xl">{char.toFormattedString()}</span>
-                <span
-                  title={names.get(char.codepoint)}
-                  class="text-xs line-clamp-2 min-w-32 max-w-full text-center underline decoration-dotted"
-                >
-                  {names.get(char.codepoint)}
-                </span>
+              <li>
+                <CharacterBox char={char} name={names.get(char.codepoint)} />
               </li>
             {/each}
           </ol>
