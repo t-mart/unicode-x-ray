@@ -39,7 +39,7 @@
 <div class="border-2 border-border flex flex-col w-32 justify-between items-center gap-2 p-2">
   <a class="font-mono link" href={getReferenceURL(char)}>{char.toFormattedCodepoint()}</a>
   <span class="text-4xl whitespace-pre">{char.toFormattedString()}</span>
-  <div class="text-xs min-w-32 max-w-full text-center h-8 flex items-center">
+  <div class="text-xs min-w-32 max-w-full text-center">
     {#if !needsClamping}
       <span class:line-clamp-2={clampLines} bind:this={nameSpan}>{name}</span>
     {:else}

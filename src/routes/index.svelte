@@ -55,14 +55,14 @@
   <Input bind:text bind:normalizationForm />
 
   {#if text.length > 0}
-    <ol class="flex flex-col gap-4">
+    <ol class="flex flex-col gap-4 min-w-0">
       {#each graphemes as grapheme}
-        <ol class="flex gap-2" transition:fade={{ duration: 100 }}>
-          <li class="text-6xl flex w-32 justify-center items-center">
+        <ol class="grid grid-flow-col grid-cols-[8rem,_1fr]" transition:fade={{ duration: 100 }}>
+          <li class="w-32 text-6xl flex justify-center items-center">
             {grapheme}
           </li>
           <li class="overflow-auto">
-            <ol class="flex gap-2">
+            <ol class="flex gap-x-2">
               {#each Array.from(grapheme).map( (character) => Character.fromString(character) ) as char}
                 <li>
                   <CharacterBox {char} name={names.get(char.codepoint)} />
