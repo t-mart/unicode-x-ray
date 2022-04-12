@@ -41,7 +41,7 @@
   <span class="text-4xl whitespace-pre">{char.toFormattedString()}</span>
   <div class="text-xs min-w-32 max-w-full text-center">
     {#if !needsClamping}
-      <span class:line-clamp-2={clampLines} bind:this={nameSpan}>{name}</span>
+      <span class:line-clamp-2={clampLines} class="h-8" bind:this={nameSpan}>{name}</span>
     {:else}
       <button
         class="underline decoration-dotted cursor-row-resize"
