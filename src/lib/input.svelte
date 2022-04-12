@@ -36,8 +36,7 @@
   lg:grid-cols-wide-input-layout
   lg:grid-rows-wide-input-layout
   lg:gap-x-4
-  gap-y-2
-  my-2"
+  gap-y-2"
 >
   <label for="text" class="">Text</label>
   <input

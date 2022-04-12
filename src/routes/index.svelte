@@ -53,27 +53,27 @@
   <Loading />
 {:then}
   <Input bind:text bind:normalizationForm />
-  <ol class="flex flex-col gap-4">
-    {#each graphemes as grapheme}
-      <ol class="flex gap-2" transition:fade="{{duration: 100}}">
-        <li
-          class="text-6xl flex w-32 justify-center items-center"
-        >
-          {grapheme}
-        </li>
-        <li class="overflow-auto">
-          <ol class="flex gap-2">
-            {#each Array.from(grapheme).map((character) => Character.fromString(character)) as char}
-              <li>
-                <CharacterBox char={char} name={names.get(char.codepoint)} />
-              </li>
-            {/each}
-          </ol>
-        </li>
-      </ol>
-    {/each}
-  </ol>
-  {#if text.length === 0}
+
+  {#if text.length > 0}
+    <ol class="flex flex-col gap-4">
+      {#each graphemes as grapheme}
+        <ol class="flex gap-2" transition:fade={{ duration: 100 }}>
+          <li class="text-6xl flex w-32 justify-center items-center">
+            {grapheme}
+          </li>
+          <li class="overflow-auto">
+            <ol class="flex gap-2">
+              {#each Array.from(grapheme).map( (character) => Character.fromString(character) ) as char}
+                <li>
+                  <CharacterBox {char} name={names.get(char.codepoint)} />
+                </li>
+              {/each}
+            </ol>
+          </li>
+        </ol>
+      {/each}
+    </ol>
+  {:else}
     <div class="italic text-stone-500 text-lg max-w-prose mx-auto">
       Or try some examples:
       <ul class="list-disc list-inside">
