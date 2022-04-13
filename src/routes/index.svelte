@@ -64,9 +64,11 @@
           <li class="overflow-auto">
             <ol class="flex gap-x-2">
               {#each Array.from(grapheme).map( (character) => Character.fromString(character) ) as char}
-                <li>
-                  <CharacterBox {char} name={names.get(char.codepoint)} />
-                </li>
+                {#key char}
+                  <li>
+                    <CharacterBox {char} name={names.get(char.codepoint)} />
+                  </li>
+                {/key}
               {/each}
             </ol>
           </li>
