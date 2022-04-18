@@ -3,7 +3,8 @@
   import type { Character } from '$lib/character';
 
   function getReferenceURL(char: Character) {
-    return `https://www.compart.com/en/unicode/${char.toFormattedCodepoint()}`;
+    // return `https://www.compart.com/en/unicode/${char.toFormattedCodepoint()}`;
+    return `https://util.unicode.org/UnicodeJsps/character.jsp?a=${char.toHexCodepoint()}`
   }
 
   function isTextClamped(ele: HTMLElement) {

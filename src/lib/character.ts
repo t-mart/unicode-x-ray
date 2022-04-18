@@ -36,8 +36,12 @@ export class Character {
     return this._str;
   }
 
+  toHexCodepoint() {
+    return this.codepoint.toString(16).toUpperCase().padStart(4, '0');
+  }
+
   toFormattedCodepoint() {
-    return 'U+' + this.codepoint.toString(16).toUpperCase().padStart(4, '0');
+    return 'U+' + this.toHexCodepoint();
   }
 
   toFormattedString() {
