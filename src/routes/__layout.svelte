@@ -13,17 +13,3 @@
     Tim Martin, <a href="https://github.com/t-mart/unicode-x-ray" class="link">source</a>
   </footer>
 </div>
-
-<style>
-  :global(body) {
-    background-color: white;
-    color: black;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :global(body) {
-      background-color: black;
-      color: white;
-    }
-  }
-</style>

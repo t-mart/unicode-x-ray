@@ -23,3 +23,15 @@
 :focus-visible {
   @apply outline-offset-2 outline-2 outline outline-accent;
 }
+
+body {
+  background-color: white;
+  color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: black;
+    color: white;
+  }
+}
