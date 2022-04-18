@@ -4,7 +4,9 @@
 
 @layer components {
   .outline-input {
-    @apply focus-visible:outline-4 focus-visible:outline-offset-[-2px]
+    /* Override focus and focus-visible states */
+    @apply focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-2px];
+    @apply focus:outline focus:outline-4 focus:outline-offset-[-2px];
   }
 
   .link {
@@ -20,7 +22,7 @@
   }
 }
 
-:focus-visible {
+:focus-visible, :focus {
   @apply outline-offset-2 outline-2 outline outline-accent;
 }
 
