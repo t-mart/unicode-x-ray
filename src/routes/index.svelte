@@ -15,8 +15,10 @@
     Z̶͕̥̾a̴̪͎͑l̴̡̈́g̷̨̨͑̅ǫ̸̐̂: '"Zalgo" text with combining characters',
     '👩🏾‍❤️‍👨🏼': 'an emoji sequence',
     '🇦🇨': 'a regional indicator',
-    㴴각g̈நிक्: 'characters from around the world',
-    ÇℌÅ: 'characters that change under different normalizations'
+    㴴ñहिবাংиमతె한یத: 'different scripts',
+    ÇℌÅ: 'characters that change under different normalizations',
+    "𝐚ᵇⓒ𝕕𝖊𝑓ℊ": 'letter-like symbols',
+    "♺⚘🗲🂱☏🖑": 'pictographic symbols'
   }).map(([text, desc]) => ({ text, desc }));
 
   function getGraphemes(text: string, normalizationForm: NormalizationForm | undefined) {
