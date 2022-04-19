@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { fade } from 'svelte/transition';
 
   import graphemeSplit from 'graphemesplit';
 
@@ -59,7 +58,7 @@
   {#if text.length > 0}
     <ol class="flex flex-col gap-4 min-w-0">
       {#each graphemes as grapheme}
-        <ol class="grid grid-flow-col grid-cols-[8rem,_1fr]" transition:fade={{ duration: 100 }}>
+        <ol class="grid grid-flow-col grid-cols-[8rem,_1fr]">
           <li class="w-32 text-6xl flex justify-center items-center">
             {grapheme}
           </li>
