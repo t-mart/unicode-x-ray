@@ -10,6 +10,8 @@
   <h1 class="text-4xl font-bold">Unicode X-Ray</h1>
   <slot />
   <footer class="text-stone-500 self-end justify-self-center mt-8">
-    Tim Martin, <a href="https://github.com/t-mart/unicode-x-ray" class="link">source</a>
+    Tim Martin,
+    <a href="https://github.com/t-mart/unicode-x-ray" class="link">source</a>,
+    <a href="/about" class="link">about</a>
   </footer>
 </div>
