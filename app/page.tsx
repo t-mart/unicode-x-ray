@@ -186,7 +186,7 @@ function useDebounceParam(value: string, delay: number) {
   }, [value, delay, router]);
 }
 
-export function Home() {
+function Home() {
   const searchParams = useSearchParams();
   const [text, setText] = useState(searchParams.get(textParam) ?? "");
   useDebounceParam(text, queryParamDelayMilliseconds);
