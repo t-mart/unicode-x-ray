@@ -9,7 +9,14 @@ import {
 } from "@/components/ui/popover";
 import { parse, type Codepoint } from "@/lib/text";
 import Link from "next/link";
-import { useState, useMemo, useEffect, createContext, useContext } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  createContext,
+  useContext,
+  Suspense,
+} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import useSWR, { SWRResponse } from "swr";
 import { getName } from "@/lib/trie";
@@ -191,74 +198,75 @@ export default function Home() {
   );
 
   return (
-    <TextContext.Provider value={setText}>
-      <div className="container mx-auto p-6">
-        <main className="space-y-4">
-          <h1 className="text-4xl">🩻 Unicode X-Ray</h1>
-          <div>
-            <div className="">
-              <Label htmlFor="text" className="text-xl">
-                Text
-              </Label>
-              {text.length > 0 && (
-                <button
-                  onClick={() => setText("")}
-                  className="link text-sm ml-4"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-            <Input
-              placeholder="Put your text here"
-              id="text"
-              className="mt-2"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-          </div>
-
-          {parsed?.graphemes.length > 0 ? (
+    <Suspense>
+      <TextContext.Provider value={setText}>
+        <div className="container mx-auto p-6">
+          <main className="space-y-4">
+            <h1 className="text-4xl">🩻 Unicode X-Ray</h1>
             <div>
-              <h2 className="text-xl">Graphemes</h2>
-              <ol className="flex flex-col w-full p-8 gap-4">
-                {parsed?.graphemes.map((grapheme, i) => (
-                  <li key={i} className="flex gap-4 items-center">
-                    <h3 className="w-24 min-w-24 font-bold text-6xl text-center">
-                      {grapheme.string}
-                    </h3>
-                    <ol className="flex flex-row gap-4 overflow-x-scroll py-4">
-                      {grapheme.codePoints.map((codePoint, j) => (
-                        <CodepointBox
-                          key={j}
-                          codepoint={codePoint}
-                          getNameForCodepointSWR={getNameForCodepointSWR}
-                        />
-                      ))}
-                    </ol>
-                  </li>
-                ))}
-              </ol>
+              <div className="">
+                <Label htmlFor="text" className="text-xl">
+                  Text
+                </Label>
+                {text.length > 0 && (
+                  <button
+                    onClick={() => setText("")}
+                    className="link text-sm ml-4"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <Input
+                placeholder="Put your text here"
+                id="text"
+                className="mt-2"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+              />
             </div>
-          ) : (
-            <ExampleBox />
-          )}
-        </main>
-        <footer className="justify-center flex gap-4 mt-16">
-          <p>Tim Martin</p>
-          <span className="select-none">&bull;</span>
-          <p>About</p>
-          <span className="select-none">&bull;</span>
-          <p>
-            <Link
-              href="https://github.com/t-mart/unicode-x-ray"
-              className="link"
-            >
-              Source
-            </Link>
-          </p>
-        </footer>
-      </div>
-    </TextContext.Provider>
+            {parsed?.graphemes.length > 0 ? (
+              <div>
+                <h2 className="text-xl">Graphemes</h2>
+                <ol className="flex flex-col w-full p-8 gap-4">
+                  {parsed?.graphemes.map((grapheme, i) => (
+                    <li key={i} className="flex gap-4 items-center">
+                      <h3 className="w-24 min-w-24 font-bold text-6xl text-center">
+                        {grapheme.string}
+                      </h3>
+                      <ol className="flex flex-row gap-4 overflow-x-scroll py-4">
+                        {grapheme.codePoints.map((codePoint, j) => (
+                          <CodepointBox
+                            key={j}
+                            codepoint={codePoint}
+                            getNameForCodepointSWR={getNameForCodepointSWR}
+                          />
+                        ))}
+                      </ol>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : (
+              <ExampleBox />
+            )}
+          </main>
+          <footer className="justify-center flex gap-4 mt-16">
+            <p>Tim Martin</p>
+            <span className="select-none">&bull;</span>
+            <p>About</p>
+            <span className="select-none">&bull;</span>
+            <p>
+              <Link
+                href="https://github.com/t-mart/unicode-x-ray"
+                className="link"
+              >
+                Source
+              </Link>
+            </p>
+          </footer>
+        </div>
+      </TextContext.Provider>
+    </Suspense>
   );
 }
