@@ -16,36 +16,49 @@ import {
   createContext,
   useContext,
   Suspense,
+  useCallback,
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import useSWR, { SWRResponse } from "swr";
 import { getName } from "@/lib/trie";
 import Logo from "@/components/logo";
 import { RefreshCw } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const examples = [
   ["Z̷̲̫̼͓̑͂͆ã̴͚̆l̴̛͍͓̙̫̔g̵̛̦̰̉͐ó̶̫̓̚", '"Zalgo" text with combining characters'],
-  ["👩‍👩‍👧‍👦", "an emoji sequence"],
-  ["🇺🇸", "a regional indicator"],
-  ["ǝʇɐɯ ʎɐp,פ", "upside-down text"],
-  ["ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖ", "superscript letters"],
-  ["℘ ℑ ℜ ℵ ∭ ∰", "mathematical notation symbols"],
-  ["𝓑𝓮𝓪𝓾𝓽𝓲𝓯𝓾𝓵", "mathematical script letters"],
-  ["ﬆ ﬅ ﬃ", "rare ligatures"],
-  ["𝔤𝔬𝔱𝔥𝔦𝔠", "fraktur/blackletter text"],
-  ["⑴⑵⑶⒜⒝⒞", "enclosed alphanumerics"],
-  ["⠓⠑⠇⠇⠕", "braille patterns"],
-  ["Ｈｅｌｌｏ Ｗｏｒｌｄ １２３", "fullwidth text"],
+  ["🧜🏻‍♂️", "An emoji sequence"],
+  ["🇺🇸", "A regional indicator"],
+  ["ǝʇɐɯ ʎɐp,פ", "Upside-down text"],
+  ["ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖ", "Superscript letters"],
+  ["℘ℑℜℵ∭∰‱↉⅍", "Mathematical notation symbols"],
+  ["𝓑𝓮𝓪𝓾𝓽𝓲𝓯𝓾𝓵", "Mathematical script letters"],
+  ["ﬆﬅﬃ", "Ligatures"],
+  ["𝔤𝔬𝔱𝔥𝔦𝔠", "Fraktur/blackletter text"],
+  ["⑴⑵⑶⒜⒝⒞", "Enclosed alphanumerics"],
+  ["⠓⠑⠇⠇⠕", "Braille patterns"],
+  ["Ｈｅｌｌｏ Ｗｏｒｌｄ １２３", "Fullwidth text"],
   ["こんにちは", "Japanese hiragana"],
   ["안녕하세요", "Korean hangul"],
   ["你好", "Chinese hanzi"],
-  ["ᚻᛖᛚᛚᚩ", "Old English runes"],
+  ["ᚹᛁᛋᛞᚩᛗ", "Old English runes"],
   ["नमस्ते", "Devanagari script"],
   ["မင်္ဂလာပါ", "Burmese script"],
   ["สวัสดี", "Thai script"],
   ["ꦱꦸꦒꦼꦁꦱꦶꦪꦁ", "Javanese script"],
-  ["ᓱᓇᐃᓕ", "Inuktitut syllabics"],
+  ["ᓂᔅᑯᒧᐃᐧᐣ", "Canadian Aboriginal syllabics"],
   ["ܫܠܡܐ", "Syriac script"],
+  ["ʤʢħŋɣʃθʊʏ", "IPA (phonetic alphabet) symbols"],
+  ["ᬓᬭᬫ ᬱᬗᬓᬭ", "Balinese script"],
+  ["♜♞♝♛♚♟", "Chess pieces"],
+  ["𝕎𝕙𝕒𝕥", "Double-struck (blackboard bold) letters"],
+  ["⌘⌥⇧⌫", "Mac keyboard symbols"],
+  ["ꬴꬓ꬀ꬂ", "Old Hungarian script"],
+  ["௧௨௩௪", "Tamil numerals"],
+  ["የሰላም", "Ethiopic script"],
+  ["⁰¹²³⁴⁵⁶⁷⁸⁹", "Superscript numbers"],
+  ["❶❷❸❹❺", "Circled numbers (filled)"],
+  ["السَّلامُ عَلَيْكُمْ", "Arabic script"],
 ];
 
 const textParam = "text";
@@ -145,9 +158,10 @@ function CodepointBox({
 
   let nameContent;
   if (getNameForCodepointSWR.isLoading) {
-    nameContent = <div></div>;
+    nameContent = <Skeleton className="w-full h-4" />;
   } else if (getNameForCodepointSWR.error) {
-    nameContent = <div></div>;
+    console.error(getNameForCodepointSWR.error);
+    nameContent = <span className="text-destructive-foreground">error!</span>;
   } else {
     nameContent = (
       <Popover>
@@ -155,7 +169,7 @@ function CodepointBox({
           <p className="line-clamp-3 decoration-dotted underline">{name}</p>
         </PopoverTrigger>
         <PopoverContent>
-          <p className="text-center">{name}</p>
+          <p className="text-center">{name ?? "<unknown>"}</p>
         </PopoverContent>
       </Popover>
     );
@@ -168,7 +182,7 @@ function CodepointBox({
           U+{formattedCodepoint}
         </Link>
       </h4>
-      <p className="text-4xl border w-min mx-auto">{codepoint.string}</p>
+      <p className="text-4xl w-min mx-auto">&nbsp;{codepoint.string}&nbsp;</p>
       {nameContent}
     </li>
   );
@@ -199,11 +213,22 @@ function Home() {
       .then((r) => r.json())
       .then((json) => (codepoint: number) => getName(codepoint, json))
   );
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setText(params.get(textParam) ?? "");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   return (
     <TextContext.Provider value={setText}>
       <div className="space-y-4">
-        <h1 className="text-4xl"><Logo outerClassName="size-16 inline" /> Unicode X-Ray</h1>
+        <h1 className="text-4xl flex items-center gap-2">
+          <Logo outerClassName="size-16" /> <span>Unicode X-Ray</span>
+        </h1>
         <div>
           <div className="">
             <Label htmlFor="text" className="text-xl">
