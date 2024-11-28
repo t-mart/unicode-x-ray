@@ -16,7 +16,6 @@ import {
   createContext,
   useContext,
   Suspense,
-  useCallback,
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import useSWR, { SWRResponse } from "swr";
