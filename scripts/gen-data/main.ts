@@ -4,7 +4,7 @@ import { rangeTrieify } from "@/lib/trie";
 
 const unicodeRootUrl = "https://www.unicode.org/Public/UCD/latest/ucd/";
 // const unicodeDataUrl = `${unicodeRootUrl}UnicodeData.txt`;
-// const unicodeNameAliasesUrl = `${unicodeRootUrl}NameAliases.txt`;
+const unicodeNameAliasesUrl = `${unicodeRootUrl}NameAliases.txt`;
 const derivedNameUrl = `${unicodeRootUrl}extracted/DerivedName.txt`;
 const unihanZipUrl = `${unicodeRootUrl}Unihan.zip`;
 
@@ -109,35 +109,37 @@ function formatCodepoint(n: number): string {
 //   return names;
 // }
 
-// function* iterateNameAliases(fileContent: string): Generator<[string, string]> {
-//   const lines = fileContent
-//     .split("\n")
-//     .map((l) => l.trim())
-//     .filter((l) => l && !l.startsWith("#"));
+function* iterateControlNameAliases(
+  fileContent: string
+): Generator<[string, string]> {
+  const lines = fileContent
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"));
 
-//   for (const line of lines) {
-//     const [codeHex, name, type] = line.split(";");
-//     if (type?.toLowerCase() === "control") {
-//       yield [codeHex.padStart(4, "0"), name];
-//     }
-//   }
-// }
+  for (const line of lines) {
+    const [codeHex, name, type] = line.split(";");
+    if (type?.toLowerCase() === "control") {
+      yield [codeHex.padStart(4, "0"), name];
+    }
+  }
+}
 
-// async function getNameAliases(): Promise<Map<string, string>> {
-//   const response = await getUrlResponse(unicodeNameAliasesUrl);
-//   const text = await response.text();
+async function getControlNameAliases(): Promise<Map<string, string>> {
+  const response = await getUrlResponse(unicodeNameAliasesUrl);
+  const text = await response.text();
 
-//   const aliases = new Map<string, string>();
+  const aliases = new Map<string, string>();
 
-//   for (const [code, name] of iterateNameAliases(text)) {
-//     // only take the first alias
-//     if (!aliases.has(code)) {
-//       aliases.set(code, name);
-//     }
-//   }
+  for (const [code, name] of iterateControlNameAliases(text)) {
+    // only take the first alias
+    if (!aliases.has(code)) {
+      aliases.set(code, name);
+    }
+  }
 
-//   return aliases;
-// }
+  return aliases;
+}
 
 function* iterateUnihanDefinitions(
   fileContent: string
@@ -215,26 +217,22 @@ async function main() {
     throw new Error("Output path is required");
   }
 
-  // const names = await getUnicodeDataNames();
   // const aliases = await getNameAliases();
   const names = await getDerivedNames();
   const definitions = await getDefinitions();
+  const aliases = await getControlNameAliases();
 
-  // merge the aliases into the main names map
-  // for (const [code, name] of aliases) {
-  //   names.set(code, name);
-  // }
-
-  // const names =
-
-  // merge the definitions into the main names map
   for (const [code, definition] of definitions) {
     names.set(code, definition);
   }
 
+  for (const [code, name] of aliases) {
+    names.set(code, name);
+  }
+
   const trie = rangeTrieify(names);
 
-  // write to foo.json
+  // Write the trie to the output path
   writeFileSync(outputPath, JSON.stringify(trie));
 }
 
