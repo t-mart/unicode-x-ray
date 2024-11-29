@@ -225,12 +225,12 @@ function Home() {
   return (
     <TextContext.Provider value={setText}>
       <div className="space-y-4">
-        <h1 className="text-4xl flex items-center gap-2">
-          <Logo outerClassName="size-16" /> <span>Unicode X-Ray</span>
+        <h1 className="croll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl flex items-center gap-2">
+          <Logo outerClassName="size-12" /> <span>Unicode X-Ray</span>
         </h1>
         <div>
           <div className="">
-            <Label htmlFor="text" className="text-xl">
+            <Label htmlFor="text" className="text-3xl font-semibold tracking-tight pb-2">
               Text
             </Label>
             {text.length > 0 && (
@@ -249,7 +249,7 @@ function Home() {
         </div>
         {parsed?.graphemes.length > 0 ? (
           <div>
-            <h2 className="text-xl">Graphemes</h2>
+            <h2 className="text-3xl font-semibold tracking-tight pb-2">Graphemes</h2>
             <ol className="flex flex-col w-full p-8 gap-4">
               {parsed?.graphemes.map((grapheme, i) => (
                 <li key={i} className="flex gap-4 items-center">
