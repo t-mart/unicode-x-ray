@@ -4,7 +4,6 @@ import Link from "next/link";
 import { H2, P, OList, H3 } from "@/components/typography";
 
 export const metadata: Metadata = {
-  // TODO: can we use the parent layout's title?
   title: "Unicode X-Ray - About",
 };
 
@@ -32,8 +31,29 @@ export default function About() {
           Return to home
         </Link>
       </p>
-      <article className="">
+      <article>
         <H2>About</H2>
+
+        <OList className="">
+          <li>
+            <a href="#general" className="link">
+              General
+            </a>
+          </li>
+          <li>
+            <a href="#normalization" className="link">
+              Normalization
+            </a>
+          </li>
+          <li>
+            <a href="#naming" className="link">
+              Naming
+            </a>
+          </li>
+        </OList>
+
+        <H3 id="general">General</H3>
+
         <P>
           When you type text into this tool, it breaks down what you see into
           two important layers that make up modern digital text:
@@ -114,7 +134,38 @@ export default function About() {
           systems often break down in unexpected ways!
         </P>
 
-        <H3>Naming</H3>
+        <H3 id="normalization">Normalization</H3>
+
+        <P className="border rounded px-4 py-2 dark:bg-amber-500/25 bg-amber-500/75">
+          This is an advanced topic that you can safely ignore! Set the dropdown
+          to &quot;None&quot; to apply no normalization.
+        </P>
+
+        <P>
+          Above, I mentioned that the <em>é</em> grapheme could be represented
+          as either a single code point or as two separate ones, even though
+          both forms represent the same semantic character. These are examples
+          of normalizations: regular processes to compose or decompose text in a
+          way that facilitates checking for semantic equivalence.
+        </P>
+
+        <P>
+          You can read more about this in{" "}
+          <Link
+            href="https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49537"
+            className="link"
+          >
+            Section 3.11 Normalization Forms of The Unicode Standard
+          </Link>
+          .
+        </P>
+
+        <P>
+          I provide control for normalization on this tool because you may be
+          interested in the different forms that text can take.
+        </P>
+
+        <H3 id="naming">Naming</H3>
         <P>
           This tool compiles code points names in a novel way that feels helpful
           to me. For each code point, the following data (produced by the
