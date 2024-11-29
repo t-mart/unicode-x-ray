@@ -16,6 +16,7 @@ import {
   createContext,
   useContext,
   Suspense,
+  useRef,
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import useSWR, { SWRResponse } from "swr";
@@ -210,6 +211,8 @@ function Home() {
       .then((r) => r.json())
       .then((json) => (codepoint: number) => getName(codepoint, json))
   );
+  const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
@@ -218,6 +221,10 @@ function Home() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    inputRef.current?.focus();
   }, []);
 
   return (
@@ -243,6 +250,7 @@ function Home() {
             className="mt-2"
             value={text}
             onChange={(e) => setText(e.target.value)}
+            ref={inputRef}
           />
         </div>
         {parsed?.graphemes.length > 0 ? (
