@@ -214,7 +214,7 @@ function coerceNormalization(value: string): Normalization {
   }
 }
 
-export const useDebouncedEffect = (
+const useDebouncedEffect = (
   effect: EffectCallback,
   deps: DependencyList = [],
   delay: number
