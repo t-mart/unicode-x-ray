@@ -20,7 +20,6 @@ import {
 import { useSearchParams, useRouter } from "next/navigation";
 import useSWR, { SWRResponse } from "swr";
 import { getName } from "@/lib/trie";
-import Logo from "@/components/logo";
 import { RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -90,20 +89,19 @@ function ExampleListItem({
   const setText = useContext(TextContext);
   const router = useRouter();
   return (
-    <li className="">
-      <span>
-        <button
-          onClick={() => {
-            setText(text);
-            const params = new URLSearchParams();
-            params.set(textParam, text);
-            router.push(`/?${params.toString()}`);
-          }}
-          className="link select-text"
-          suppressHydrationWarning
-        >
-          {text}
-        </button>
+    <li>
+      <span
+        onClick={() => {
+          setText(text);
+          const params = new URLSearchParams();
+          params.set(textParam, text);
+          router.push(`/?${params.toString()}`);
+        }}
+        role="button"
+        className="link select-text inline p-0 m-0"
+        suppressHydrationWarning
+      >
+        {text}
       </span>{" "}
       <span className="ml-2" suppressHydrationWarning>
         {description}
@@ -120,8 +118,8 @@ function ExampleBox() {
   const [selected, setSelected] = useState(chooseRandomly());
 
   return (
-    <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4 w-96 mx-auto">
-      <div className="flex justify-between">
+    <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4 max-w-96 mx-auto">
+      <div className="flex justify-between flex-wrap gap-2">
         <p>Try some examples:</p>
         <button
           onClick={() => setSelected(chooseRandomly())}
@@ -131,7 +129,7 @@ function ExampleBox() {
           Pick new ones
         </button>
       </div>
-      <ul className="flex flex-col gap-4 list-disc list-inside">
+      <ul className="list-disc space-y-4 list-inside">
         {selected.map(([text, description], i) => (
           <ExampleListItem key={i} text={text} description={description} />
         ))}
@@ -225,12 +223,12 @@ function Home() {
   return (
     <TextContext.Provider value={setText}>
       <div className="space-y-4">
-        <h1 className="croll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl flex items-center gap-2">
-          <Logo outerClassName="size-12" /> <span>Unicode X-Ray</span>
-        </h1>
         <div>
           <div className="">
-            <Label htmlFor="text" className="text-3xl font-semibold tracking-tight pb-2">
+            <Label
+              htmlFor="text"
+              className="text-3xl font-semibold tracking-tight pb-2"
+            >
               Text
             </Label>
             {text.length > 0 && (
@@ -249,7 +247,9 @@ function Home() {
         </div>
         {parsed?.graphemes.length > 0 ? (
           <div>
-            <h2 className="text-3xl font-semibold tracking-tight pb-2">Graphemes</h2>
+            <h2 className="text-3xl font-semibold tracking-tight pb-2">
+              Graphemes
+            </h2>
             <ol className="flex flex-col w-full p-8 gap-4">
               {parsed?.graphemes.map((grapheme, i) => (
                 <li key={i} className="flex gap-4 items-center">

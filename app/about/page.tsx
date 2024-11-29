@@ -2,8 +2,10 @@ import { ArrowLeft } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { H2, P, OList, H3 } from "@/components/typography";
 
 export const metadata: Metadata = {
+  // TODO: can we use the parent layout's title?
   title: "Unicode X-Ray - About",
 };
 
@@ -17,13 +19,11 @@ export default function About() {
         </Link>
       </p>
       <article className="">
-        <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-          About
-        </h1>
-        <p className="leading-7 [&:not(:first-child)]:mt-6">
+        <H2>About</H2>
+        <P>
           When you type text into this tool, it breaks down what you see into
           two important layers that make up modern digital text:
-        </p>
+        </P>
         <Image
           src="/breakdown.png"
           alt="Text has graphemes, graphemes have code points"
@@ -31,7 +31,7 @@ export default function About() {
           width={404}
           height={265}
         />
-        <p className="leading-7 [&:not(:first-child)]:mt-6">
+        <P>
           <dfn>Graphemes</dfn> are what we typically think of as individual{" "}
           <q>characters</q> &mdash; the visual units that make sense to our
           eyes. For example, in the word{" "}
@@ -44,8 +44,8 @@ export default function About() {
             <em>é</em>
           </q>{" "}
           which is actually built from multiple pieces.
-        </p>
-        <p className="leading-7 [&:not(:first-child)]:mt-6">
+        </P>
+        <P>
           <dfn>Code points</dfn> are the underlying building blocks of text that
           computers use to represent each piece as individual Unicode numbers.
           While a grapheme is what you see, code points are what the computer
@@ -59,25 +59,23 @@ export default function About() {
             <em>e</em>
           </q>
           followed by an accent mark) that combine to create what you see.
-        </p>
-        <p className="leading-7 [&:not(:first-child)]:mt-6">
+        </P>
+        <P>
           Try typing or pasting some text to see how what appears simple on
           screen can be more complex under the hood. You might be surprised to
           find that emojis, accented characters, and text from different writing
           systems often break down in unexpected ways!
-        </p>
+        </P>
 
-        <h2 className="mt-10 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-          Naming
-        </h2>
-        <p className="leading-7 [&:not(:first-child)]:mt-6">
+        <H3>Naming</H3>
+        <P>
           This tool compiles codepoints names in a novel way that feels helpful
           to me. For each codepoint, the following data (produced by the Unicode
           Consortium) are applied, from lowest precedence to highest:
-        </p>
-        <ol className="my-6 ml-6 list-decimal [&>li]:mt-2">
+        </P>
+        <OList>
           <li>
-            <p className="leading-7 [&:not(:first-child)]:mt-6">
+            <P>
               The name field from{" "}
               <code>
                 <Link
@@ -90,14 +88,14 @@ export default function About() {
               . If the codepoint category is <code>Cc</code> (indicating a
               control character), then the Unicode 1.0 name field is used
               instead.
-            </p>
-            <p className="leading-7 [&:not(:first-child)]:mt-6">
+            </P>
+            <P>
               This file is, by far, the largest source for codepoint names in
               this process.
-            </p>
+            </P>
           </li>
           <li>
-            <p className="leading-7 [&:not(:first-child)]:mt-6">
+            <P>
               The comment field from{" "}
               <code>
                 <Link
@@ -109,13 +107,11 @@ export default function About() {
               </code>
               . This field is probably non-standard, but it&apos;s the most
               helpful.
-            </p>
-            <p className="leading-7 [&:not(:first-child)]:mt-6">
-              Jamo are the alphabetic components of Korean Hangul.
-            </p>
+            </P>
+            <P>Jamo are the alphabetic components of Korean Hangul.</P>
           </li>
           <li>
-            <p className="leading-7 [&:not(:first-child)]:mt-6">
+            <P>
               <code>kDefinition</code> entries from{" "}
               <code>Unihan_Readings.txt</code> in{" "}
               <code>
@@ -128,14 +124,14 @@ export default function About() {
               </code>
               . Instead of replacing the name, the value here is appended to the
               value from the previous steps.
-            </p>
+            </P>
 
-            <p className="leading-7 [&:not(:first-child)]:mt-6">
+            <P>
               <code>kDefinition</code> entries are provided for many Chinese,
               Japanese, and Korean ideographic characters.
-            </p>
+            </P>
           </li>
-        </ol>
+        </OList>
       </article>
     </div>
   );
