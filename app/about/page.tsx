@@ -71,24 +71,70 @@ export default function About() {
           Naming
         </h2>
         <p className="leading-7 [&:not(:first-child)]:mt-6">
-          This tool chooses names for codepoints in a novel way. All sources are
-          official from the Unicode Consortium, but they are combined in a way
-          that is not standard but is hopefully more intuitive:
+          This tool compiles codepoints names in a novel way that feels helpful
+          to me. For each codepoint, the following data (produced by the Unicode
+          Consortium) are applied, from lowest precedence to highest:
         </p>
-        <ol className="my-6 ml-6 list-disc [&>li]:mt-2">
+        <ol className="my-6 ml-6 list-decimal [&>li]:mt-2">
           <li>
-            First, names from{" "}
-            <code>
-              <Link
-                href="https://www.unicode.org/Public/UCD/latest/ucd/extracted/DerivedName.txt"
-                className="link"
-              >
-                DerivedName.txt
-              </Link>
-            </code> are applied
-            .
+            <p className="leading-7 [&:not(:first-child)]:mt-6">
+              The name field from{" "}
+              <code>
+                <Link
+                  href="https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt"
+                  className="link"
+                >
+                  UnicodeData.txt
+                </Link>
+              </code>
+              . If the codepoint category is <code>Cc</code> (indicating a
+              control character), then the Unicode 1.0 name field is used
+              instead.
+            </p>
+            <p className="leading-7 [&:not(:first-child)]:mt-6">
+              This file is, by far, the largest source for codepoint names in
+              this process.
+            </p>
           </li>
-          <li>Then, the <code>kDefinition</code> field from </li>
+          <li>
+            <p className="leading-7 [&:not(:first-child)]:mt-6">
+              The comment field from{" "}
+              <code>
+                <Link
+                  href="https://www.unicode.org/Public/UCD/latest/ucd/Jamo.txt"
+                  className="link"
+                >
+                  Jamo.txt
+                </Link>
+              </code>
+              . This field is probably non-standard, but it&apos;s the most
+              helpful.
+            </p>
+            <p className="leading-7 [&:not(:first-child)]:mt-6">
+              Jamo are the alphabetic components of Korean Hangul.
+            </p>
+          </li>
+          <li>
+            <p className="leading-7 [&:not(:first-child)]:mt-6">
+              <code>kDefinition</code> entries from{" "}
+              <code>Unihan_Readings.txt</code> in{" "}
+              <code>
+                <Link
+                  href="https://www.unicode.org/Public/UCD/latest/ucd/Unihan.zip"
+                  className="link"
+                >
+                  Unihan.zip
+                </Link>
+              </code>
+              . Instead of replacing the name, the value here is appended to the
+              value from the previous steps.
+            </p>
+
+            <p className="leading-7 [&:not(:first-child)]:mt-6">
+              <code>kDefinition</code> entries are provided for many Chinese,
+              Japanese, and Korean ideographic characters.
+            </p>
+          </li>
         </ol>
       </article>
     </div>

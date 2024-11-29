@@ -12,15 +12,13 @@ export type RangeTrieNode = [
 
 export function rangeTrieify(names: Map<string, string>): RangeTrieNode[] {
   const trie: RangeTrieNode[] = [];
-  const [minCodepoint, maxCodepoint] = names
-    .keys()
-    .reduce(
-      ([min, max], code) => [
-        Math.min(min, parseInt(code, 16)),
-        Math.max(max, parseInt(code, 16)),
-      ],
-      [Infinity, -Infinity]
-    );
+  const [minCodepoint, maxCodepoint] = [...names.keys()].reduce(
+    ([min, max], code) => [
+      Math.min(min, parseInt(code, 16)),
+      Math.max(max, parseInt(code, 16)),
+    ],
+    [Infinity, -Infinity]
+  );
 
   for (let codepoint = minCodepoint; codepoint <= maxCodepoint; codepoint++) {
     const codepointString = codepoint
