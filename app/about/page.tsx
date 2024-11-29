@@ -162,13 +162,22 @@ export default function About() {
 
         <P>
           I provide control for normalization on this tool because you may be
-          interested in the different forms that text can take.
+          interested in the different forms that text can take. Try looking at
+          the codepoints produced by looking at <em>é</em> under{" "}
+          <Link href="/?text=é&norm=NFC" className="link">
+            NFC
+          </Link>{" "}
+          and{" "}
+          <Link href="/?text=é&norm=NFD" className="link">
+            NFD
+          </Link>{" "}
+          forms.
         </P>
 
         <H3 id="naming">Naming</H3>
         <P>
-          This tool compiles code points names in a novel way that feels helpful
-          to me. For each code point, the following data (produced by the
+          This tool compiles code point names in a novel way that I thought was
+          most helpful. For each code point, the following data (produced by the
           Unicode Consortium) are applied, from lowest precedence to highest:
         </P>
         <OList>
@@ -206,7 +215,11 @@ export default function About() {
               . This field is probably non-standard, but it&apos;s the most
               helpful.
             </P>
-            <P>Jamo are the alphabetic components of Korean Hangul.</P>
+            <P>
+              Jamo are the alphabetic components of Korean Hangul, and there is
+              just a nice little chunk of detail that this step provides to
+              those code points.
+            </P>
           </li>
           <li>
             <P>
@@ -226,7 +239,8 @@ export default function About() {
 
             <P>
               <code>kDefinition</code> entries are provided for many Chinese,
-              Japanese, and Korean ideographic characters.
+              Japanese, and Korean ideographic characters. This can help
+              non-speakers access the meaning of these characters.
             </P>
           </li>
         </OList>

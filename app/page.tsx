@@ -227,7 +227,6 @@ export const useDebouncedEffect = (
 };
 
 function Home() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [text, setText] = useState(searchParams.get(textParam) ?? "");
