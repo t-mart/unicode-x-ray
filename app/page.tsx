@@ -285,7 +285,6 @@ function Home() {
   // popstate to form
   useEffect(() => {
     const handlePopState = () => {
-      console.log("popstate", window.location.search);
       const params = new URLSearchParams(window.location.search);
       setText(params.get(textParam) ?? "");
       setNormalization(
@@ -341,7 +340,6 @@ function Home() {
             value={normalization}
             onValueChange={(v) => {
               setNormalization(v as Normalization);
-              console.log(v);
             }}
           >
             <SelectTrigger className="mt-2" id="normalization">

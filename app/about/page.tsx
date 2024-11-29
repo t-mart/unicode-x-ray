@@ -216,9 +216,8 @@ export default function About() {
               helpful.
             </P>
             <P>
-              Jamo are the alphabetic components of Korean Hangul, and there is
-              just a nice little chunk of detail that this step provides to
-              those code points.
+              Jamo are the alphabetic components of Korean Hangul, and this file
+              enriches those code point names just a little bit more.
             </P>
           </li>
           <li>
