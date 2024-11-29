@@ -1,13 +1,27 @@
 import { ArrowLeft } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { H2, P, OList, H3 } from "@/components/typography";
 
 export const metadata: Metadata = {
   // TODO: can we use the parent layout's title?
   title: "Unicode X-Ray - About",
 };
+
+function Figure({
+  children,
+  caption,
+}: {
+  children: React.ReactNode;
+  caption: React.ReactNode;
+}) {
+  return (
+    <figure>
+      <div className="w-fit border p-4 mx-auto select-none">{children}</div>
+      <figcaption className="text-center text-sm mt-2">{caption}</figcaption>
+    </figure>
+  );
+}
 
 export default function About() {
   return (
@@ -24,41 +38,74 @@ export default function About() {
           When you type text into this tool, it breaks down what you see into
           two important layers that make up modern digital text:
         </P>
-        <Image
-          src="/breakdown.png"
-          alt="Text has graphemes, graphemes have code points"
-          className="w-full mt-10"
-          width={404}
-          height={265}
-        />
+
+        <Figure
+          caption={
+            <P className="mb-0">
+              The word <em>café</em> is made up of four graphemes: <em>c</em>,{" "}
+              <em>a</em>, <em>f</em>, and <em>é</em>.
+            </P>
+          }
+        >
+          <div className="flex text-4xl items-center justify-center gap-4">
+            <span>café</span>
+            <span>→</span>
+            <div className="flex items-center justify-center gap-2">
+              <span>c</span>
+              <span className="text-2xl">+</span>
+              <span>a</span>
+              <span className="text-2xl">+</span>
+              <span>f</span>
+              <span className="text-2xl">+</span>
+              <span>é</span>
+            </div>
+          </div>
+        </Figure>
+
         <P>
           <dfn>Graphemes</dfn> are what we typically think of as individual{" "}
           <q>characters</q> &mdash; the visual units that make sense to our
-          eyes. For example, in the word{" "}
-          <q>
-            <em>café</em>
-          </q>
-          , we see four graphemes. But some graphemes are more complex than they
-          appear, such as the
-          <q>
-            <em>é</em>
-          </q>{" "}
-          which is actually built from multiple pieces.
+          eyes. For example, in the word <em>café</em>, we see four graphemes.
+          But some graphemes are more complex than they appear, such as the
+          <em>é</em> which is actually built from multiple pieces.
         </P>
+
+        <Figure
+          caption={
+            <P className="mb-0">
+              The grapheme <em>é</em> can be represented as either as two
+              separate code points or as a single code point.
+            </P>
+          }
+        >
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex text-4xl items-center justify-center gap-4">
+              <span>é</span>
+              <span>→</span>
+              <div className="flex items-center justify-center gap-2">
+                <span>e</span>
+                <span className="text-2xl">+</span>
+                <span>◌́</span>
+              </div>
+            </div>
+            <span>or</span>
+            <div className="flex text-4xl items-center justify-center gap-4">
+              <span>é</span>
+              <span>→</span>
+              <div className="flex items-center justify-center gap-2">
+                <span>é</span>
+              </div>
+            </div>
+          </div>
+        </Figure>
+
         <P>
           <dfn>Code points</dfn> are the underlying building blocks of text that
           computers use to represent each piece as individual Unicode numbers.
           While a grapheme is what you see, code points are what the computer
-          sees. That{" "}
-          <q>
-            <em>é</em>
-          </q>{" "}
-          we mentioned? It could be stored as either a single code point or as
-          two separate ones (an{" "}
-          <q>
-            <em>e</em>
-          </q>
-          followed by an accent mark) that combine to create what you see.
+          sees. That <em>é</em> we mentioned? It could be stored as either a
+          single code point or as two separate ones (an <em>e</em> followed by
+          an accent mark) that combine to create what you see.
         </P>
         <P>
           Try typing or pasting some text to see how what appears simple on
@@ -69,9 +116,9 @@ export default function About() {
 
         <H3>Naming</H3>
         <P>
-          This tool compiles codepoints names in a novel way that feels helpful
-          to me. For each codepoint, the following data (produced by the Unicode
-          Consortium) are applied, from lowest precedence to highest:
+          This tool compiles code points names in a novel way that feels helpful
+          to me. For each code point, the following data (produced by the
+          Unicode Consortium) are applied, from lowest precedence to highest:
         </P>
         <OList>
           <li>
@@ -85,12 +132,12 @@ export default function About() {
                   UnicodeData.txt
                 </Link>
               </code>
-              . If the codepoint category is <code>Cc</code> (indicating a
+              . If the code point category is <code>Cc</code> (indicating a
               control character), then the Unicode 1.0 name field is used
               instead.
             </P>
             <P>
-              This file is, by far, the largest source for codepoint names in
+              This file is, by far, the largest source for code point names in
               this process.
             </P>
           </li>
