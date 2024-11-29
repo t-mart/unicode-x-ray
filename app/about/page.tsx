@@ -66,7 +66,7 @@ export default function About() {
           <dfn>Graphemes</dfn> are what we typically think of as individual{" "}
           <q>characters</q> &mdash; the visual units that make sense to our
           eyes. For example, in the word <em>café</em>, we see four graphemes.
-          But some graphemes are more complex than they appear, such as the
+          But some graphemes are more complex than they appear, such as the{" "}
           <em>é</em> which is actually built from multiple pieces.
         </P>
 
