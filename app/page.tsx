@@ -321,7 +321,7 @@ function Form({
   );
 }
 
-export default function Page() {
+export function XRay() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -358,6 +358,14 @@ export default function Page() {
           <ExampleBox setText={setText} />
         )}
       </div>
+    </Suspense>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <XRay />
     </Suspense>
   );
 }
