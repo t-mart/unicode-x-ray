@@ -321,7 +321,7 @@ function Form({
   );
 }
 
-export function XRay() {
+function XRay() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
