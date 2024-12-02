@@ -7,17 +7,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { parse, type Codepoint } from "@/lib/text";
+import { Grapheme, parse, type Codepoint } from "@/lib/text";
 import Link from "next/link";
-import {
-  useState,
-  useMemo,
-  useEffect,
-  createContext,
-  useContext,
-  Suspense,
-  useRef,
-} from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -25,13 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSearchParams } from "next/navigation";
-import useSWR, { SWRResponse } from "swr";
-import { getName } from "@/lib/trie";
+import { useSearchParams, useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import useSWRImmutable from "swr/immutable";
 
-const examples = [
+type Example = [string, string];
+
+const examples: Example[] = [
   ["Z̷̲̫̼͓̑͂͆ã̴͚̆l̴̛͍͓̙̫̔g̵̛̦̰̉͐ó̶̫̓̚", '"Zalgo" text with combining characters'],
   ["🧜🏻‍♂️", "An emoji sequence"],
   ["🇺🇸", "A regional indicator"],
@@ -72,8 +65,6 @@ const normalizationParam = "norm";
 
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
-const TextContext = createContext<(text: string) => void>(() => {});
-
 /**
  * Return a codepoint number in hexadecimal form. The string is uppercase and is
  * at least 4 characters long, zero-prefixing if necessary.
@@ -82,18 +73,19 @@ const TextContext = createContext<(text: string) => void>(() => {});
  *
  * @returns The formatted codepoint.
  */
-function formatCodepoint(codepoint: Codepoint) {
-  return codepoint.value.toString(16).toUpperCase().padStart(4, "0");
+function formatCodepoint(codepoint: number) {
+  return codepoint.toString(16).toUpperCase().padStart(4, "0");
 }
 
 function ExampleListItem({
   text,
+  setText,
   description,
 }: {
   text: string;
+  setText: (text: string) => void;
   description: string;
 }) {
-  const setText = useContext(TextContext);
   return (
     <li>
       <span
@@ -104,23 +96,26 @@ function ExampleListItem({
         }}
         role="button"
         className="link select-text inline p-0 m-0"
-        suppressHydrationWarning
       >
         {text}
       </span>{" "}
-      <span className="ml-2" suppressHydrationWarning>
-        {description}
-      </span>
+      <span className="ml-2">{description}</span>
     </li>
   );
 }
 
-function ExampleBox() {
+function ExampleBox({ setText }: { setText: (text: string) => void }) {
   function chooseRandomly() {
     return examples.sort(() => Math.random() - 0.5).slice(0, 3);
   }
 
-  const [selected, setSelected] = useState(chooseRandomly());
+  const [selected, setSelected] = useState<Example[]>([]);
+
+  // do this in an effect. we don't want this done on the server because it is
+  // derived from randomness
+  useEffect(() => {
+    setSelected(chooseRandomly());
+  }, []);
 
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4 max-w-96 mx-auto">
@@ -136,36 +131,53 @@ function ExampleBox() {
       </div>
       <ul className="list-disc space-y-4 list-inside">
         {selected.map(([text, description], i) => (
-          <ExampleListItem key={i} text={text} description={description} />
+          <ExampleListItem
+            key={i}
+            text={text}
+            description={description}
+            setText={setText}
+          />
         ))}
       </ul>
     </div>
   );
 }
 
-function CodepointBox({
-  codepoint,
-  getNameForCodepointSWR,
-}: {
-  codepoint: Codepoint;
-  getNameForCodepointSWR: SWRResponse<
-    (codepoint: number) => string | null,
-    Error,
-    unknown
-  >;
-}) {
-  const formattedCodepoint = formatCodepoint(codepoint);
+function CodepointBox({ codepoint }: { codepoint: Codepoint }) {
+  const formattedCodepoint = formatCodepoint(codepoint.value);
   const unicodeUtilitiesUrl = `https://util.unicode.org/UnicodeJsps/character.jsp?a=${formattedCodepoint}`;
-  const name = getNameForCodepointSWR.data?.(codepoint.value) ?? undefined;
 
-  let nameContent;
-  if (getNameForCodepointSWR.isLoading) {
-    nameContent = <Skeleton className="w-full h-4" />;
-  } else if (getNameForCodepointSWR.error) {
-    console.error(getNameForCodepointSWR.error);
-    nameContent = <span className="text-destructive-foreground">error!</span>;
+  return (
+    <li className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4 text-center w-36 min-w-36">
+      <h4 className="font-semibold font-mono leading-none tracking-tight">
+        <Link href={unicodeUtilitiesUrl} className="link">
+          U+{formattedCodepoint}
+        </Link>
+      </h4>
+      <p className="text-4xl w-min mx-auto">&nbsp;{codepoint.string}&nbsp;</p>
+      <CodepointName codepoint={codepoint.value} />
+    </li>
+  );
+}
+
+function CodepointName({ codepoint }: { codepoint: number }) {
+  const {
+    data: name,
+    error: isError,
+    isLoading: isPending,
+    error,
+  } = useSWRImmutable(`/api/names/${formatCodepoint(codepoint)}`, (url) =>
+    fetch(url)
+      .then((res) => res.json())
+      .then((json) => json.name)
+  );
+
+  if (isPending) {
+    return <Skeleton className="w-full h-4" />;
+  } else if (isError) {
+    return <span className="text-destructive-foreground">{error.message}</span>;
   } else {
-    nameContent = (
+    return (
       <Popover>
         <PopoverTrigger>
           <p className="line-clamp-3 decoration-dotted underline">{name}</p>
@@ -176,36 +188,20 @@ function CodepointBox({
       </Popover>
     );
   }
-
-  return (
-    <li className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4 text-center w-36 min-w-36">
-      <h4 className="font-semibold font-mono leading-none tracking-tight">
-        <Link href={unicodeUtilitiesUrl} className="link">
-          U+{formattedCodepoint}
-        </Link>
-      </h4>
-      <p className="text-4xl w-min mx-auto">&nbsp;{codepoint.string}&nbsp;</p>
-      {nameContent}
-    </li>
-  );
 }
 
 const normalizationValues = ["None", "NFC", "NFD", "NFKC", "NFKD"] as const;
 type Normalization = (typeof normalizationValues)[number];
 
-function coerceNormalization(value: string): Normalization {
-  switch (value) {
-    case "NFC":
-      return "NFC";
-    case "NFD":
-      return "NFD";
-    case "NFKC":
-      return "NFKC";
-    case "NFKD":
-      return "NFKD";
-    default:
-      return "None";
+function coerceNormalization(value: string | null): Normalization {
+  if (value === null) {
+    return "None";
   }
+
+  if (normalizationValues.includes(value as Normalization)) {
+    return value as Normalization;
+  }
+  return "None";
 }
 
 function copyToClipboard(text: string, normalization: Normalization) {
@@ -217,27 +213,45 @@ function copyToClipboard(text: string, normalization: Normalization) {
   navigator.clipboard.writeText(url.toString());
 }
 
-function Home() {
-  const searchParams = useSearchParams();
+function Graphemes({ graphemes }: { graphemes: Grapheme[] }) {
+  return (
+    <div>
+      <h2 className="text-3xl font-semibold tracking-tight pb-2">Graphemes</h2>
+      <ol className="flex flex-col w-full p-8 gap-4">
+        {graphemes.map((grapheme, graphemeIndex) => (
+          <li
+            key={`${graphemeIndex}-${grapheme.string}`}
+            className="flex gap-4 items-center"
+          >
+            <h3 className="w-24 min-w-24 font-bold text-6xl text-center">
+              {grapheme.string}
+            </h3>
+            <ol className="flex flex-row gap-4 overflow-x-scroll py-4">
+              {grapheme.codePoints.map((codePoint, codePointIndex) => (
+                <CodepointBox
+                  key={`${codePoint.value}-${codePointIndex}`}
+                  codepoint={codePoint}
+                />
+              ))}
+            </ol>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
 
-  const [text, setText] = useState(searchParams.get(textParam) ?? "");
-  const [normalization, setNormalization] = useState(
-    coerceNormalization(searchParams.get(normalizationParam) ?? "None")
-  );
-
-  const parsed = useMemo(
-    () =>
-      parse(
-        normalization === "None" ? text : text.normalize(normalization),
-        segmenter
-      ),
-    [text, normalization]
-  );
-  const getNameForCodepointSWR = useSWR("/names.json", (url: string) =>
-    fetch(url)
-      .then((r) => r.json())
-      .then((json) => (codepoint: number) => getName(codepoint, json))
-  );
+function Form({
+  text,
+  setText,
+  normalization,
+  setNormalization,
+}: {
+  text: string;
+  setText: (text: string) => void;
+  normalization: Normalization;
+  setNormalization: (normalization: Normalization) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -245,106 +259,103 @@ function Home() {
   }, []);
 
   return (
-    <TextContext.Provider value={setText}>
-      <div className="space-y-4">
-        <div className="grid grid-cols-[5fr,_1fr] grid-rows-2 grid-flow-col gap-x-2">
-          <div>
-            <Label
-              htmlFor="text"
-              className="text-3xl font-semibold tracking-tight pb-2"
+    <div className="grid grid-cols-[5fr,_1fr] grid-rows-2 grid-flow-col gap-x-2">
+      <div>
+        <Label
+          htmlFor="text"
+          className="text-3xl font-semibold tracking-tight pb-2"
+        >
+          Text
+        </Label>
+        {text.length > 0 && (
+          <>
+            <button onClick={() => setText("")} className="link text-sm ml-4">
+              Clear
+            </button>
+            <button
+              onClick={() => {
+                copyToClipboard(text, normalization);
+              }}
+              className="link text-sm ml-4"
             >
-              Text
-            </Label>
-            {text.length > 0 && (
-              <>
-                <button
-                  onClick={() => setText("")}
-                  className="link text-sm ml-4"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={() => {
-                    copyToClipboard(text, normalization);
-                  }}
-                  className="link text-sm ml-4"
-                >
-                  Copy link to clipboard
-                </button>
-              </>
-            )}
-          </div>
-          <Input
-            placeholder="Put your text here"
-            id="text"
-            className="mt-2"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            ref={inputRef}
-          />
-          <Label
-            htmlFor="text"
-            className="text-sm font-semibold tracking-tight pb-2 self-end"
-          >
-            Normalization
-            <Link href="/about#normalization" className="link">
-              (?)
-            </Link>
-          </Label>
-          <Select
-            value={normalization}
-            onValueChange={(v) => {
-              setNormalization(v as Normalization);
-            }}
-          >
-            <SelectTrigger className="mt-2" id="normalization">
-              <SelectValue placeholder="Normalization" />
-            </SelectTrigger>
-            <SelectContent>
-              {normalizationValues.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {parsed?.graphemes.length > 0 ? (
-          <div>
-            <h2 className="text-3xl font-semibold tracking-tight pb-2">
-              Graphemes
-            </h2>
-            <ol className="flex flex-col w-full p-8 gap-4">
-              {parsed?.graphemes.map((grapheme, i) => (
-                <li key={i} className="flex gap-4 items-center">
-                  <h3 className="w-24 min-w-24 font-bold text-6xl text-center">
-                    {grapheme.string}
-                  </h3>
-                  <ol className="flex flex-row gap-4 overflow-x-scroll py-4">
-                    {grapheme.codePoints.map((codePoint, j) => (
-                      <CodepointBox
-                        key={j}
-                        codepoint={codePoint}
-                        getNameForCodepointSWR={getNameForCodepointSWR}
-                      />
-                    ))}
-                  </ol>
-                </li>
-              ))}
-            </ol>
-          </div>
-        ) : (
-          <ExampleBox />
+              Copy link to clipboard
+            </button>
+          </>
         )}
       </div>
-    </TextContext.Provider>
+      <Input
+        placeholder="Put your text here"
+        id="text"
+        className="mt-2"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        ref={inputRef}
+      />
+      <Label
+        htmlFor="text"
+        className="text-sm font-semibold tracking-tight pb-2 self-end"
+      >
+        Normalization
+        <Link href="/about#normalization" className="link">
+          (?)
+        </Link>
+      </Label>
+      <Select
+        value={normalization}
+        onValueChange={(v) => {
+          setNormalization(v as Normalization);
+        }}
+      >
+        <SelectTrigger className="mt-2" id="normalization">
+          <SelectValue placeholder="Normalization" />
+        </SelectTrigger>
+        <SelectContent>
+          {normalizationValues.map((value) => (
+            <SelectItem key={value} value={value}>
+              {value}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
 export default function Page() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [text, setText] = useState(searchParams.get(textParam) ?? "");
+  const [normalization, setNormalization] = useState(
+    coerceNormalization(searchParams.get(normalizationParam))
+  );
+
+  useEffect(() => {
+    router.push("/");
+  }, [router]);
+
+  const parsed = useMemo(() => {
+    let t = text;
+    if (normalization !== "None") {
+      t = t.normalize(normalization);
+    }
+
+    return parse(t, segmenter);
+  }, [text, normalization]);
+
   return (
-    <Suspense>
-      <Home />
-    </Suspense>
+    <div className="space-y-4">
+      <Form
+        text={text}
+        setText={setText}
+        normalization={normalization}
+        setNormalization={setNormalization}
+      />
+      {parsed.graphemes.length > 0 ? (
+        <Graphemes graphemes={parsed.graphemes} />
+      ) : (
+        <ExampleBox setText={setText} />
+      )}
+    </div>
   );
 }
