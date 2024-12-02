@@ -4,8 +4,8 @@ import { rangeTrieify } from "@/lib/trie";
 
 const unicodeRootUrl = "https://www.unicode.org/Public/UCD/latest/ucd/";
 const unicodeDataUrl = `${unicodeRootUrl}UnicodeData.txt`;
-const unicodeJamoUrl = `${unicodeRootUrl}Jamo.txt`;
 const unihanZipUrl = `${unicodeRootUrl}Unihan.zip`;
+const derivedNameUrl = `${unicodeRootUrl}extracted/DerivedName.txt`;
 
 async function extractFileFromZip(
   blob: globalThis.Blob,
@@ -119,32 +119,6 @@ async function getUnicodeDataNames(): Promise<Map<string, string>> {
   return names;
 }
 
-function* iterateJamoNames(fileContent: string): Generator<[string, string]> {
-  const lines = fileContent
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"));
-
-  for (const line of lines) {
-    const [firstPart, name] = line.split("#");
-    const [codepoint] = firstPart.split(";");
-    yield [codepoint, name].map((s) => s.trim()) as [string, string];
-  }
-}
-
-async function getJamoNames(): Promise<Map<string, string>> {
-  const response = await getUrlResponse(unicodeJamoUrl);
-  const text = await response.text();
-
-  const names = new Map<string, string>();
-
-  for (const [code, name] of iterateJamoNames(text)) {
-    names.set(code, name);
-  }
-
-  return names;
-}
-
 function* iterateUnihanKDefinitions(
   fileContent: string
 ): Generator<[string, string]> {
@@ -175,6 +149,50 @@ async function getKDefinitions(): Promise<Map<string, string>> {
   return definitions;
 }
 
+function* iterateDerivedNames(
+  fileContent: string
+): Generator<[string, string]> {
+  const lines = fileContent
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"));
+
+  for (const line of lines) {
+    const [codepoint, name] = line.split(";").map((s) => s.trim());
+    const [rangeStart, rangeEnd] = codepoint.split("..");
+
+    if (rangeEnd) {
+      const start = parseInt(rangeStart, 16);
+      const end = parseInt(rangeEnd, 16);
+
+      if (!name.endsWith("-*")) {
+        throw new Error("Expected name to end with '-*'");
+      }
+
+      const unsuffixedName = name.slice(0, -2);
+
+      for (let n = start; n <= end; n++) {
+        yield [formatCodepoint(n), unsuffixedName];
+      }
+    } else {
+      yield [codepoint, name];
+    }
+  }
+}
+
+async function getDerivedNames(): Promise<Map<string, string>> {
+  const response = await getUrlResponse(derivedNameUrl);
+  const text = await response.text();
+
+  const names = new Map<string, string>();
+
+  for (const [code, name] of iterateDerivedNames(text)) {
+    names.set(code, name);
+  }
+
+  return names;
+}
+
 async function main() {
   // get the first argument: the path to which we will write the JSON
   const [outputPath] = process.argv.slice(2);
@@ -183,12 +201,19 @@ async function main() {
     throw new Error("Output path is required");
   }
 
+  // base names
   const names = await getUnicodeDataNames();
-  const jamoNames = await getJamoNames();
+
+  // derived names. applies some nice things like:
+  // - adds the syllable to Hangul (Korean) characters. e.g. "Hangul Syllable" -> "HANGUL SYLLABLE GA"
+  // - makes some ranges more "human". e.g. "CJK Ideograph Extension A" -> "CJK UNIFIED IDEOGRAPH"
+  const derivedNames = await getDerivedNames();
+
+  // kDefinitions. adds definitions for some Chinese, Japanese, and Korean ideographic characters
   const kDefinitions = await getKDefinitions();
 
   // Combine. last value wins for a given key
-  const combined = new Map([...names, ...jamoNames]);
+  const combined = new Map([...names, ...derivedNames]);
 
   // kDefinitions are applied a little differently: we retain the value from
   // name, but append the kDefinition

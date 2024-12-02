@@ -142,11 +142,12 @@ export default function About() {
         </P>
 
         <P>
-          Above, I mentioned that the <em>é</em> grapheme could be represented
-          as either a single code point or as two separate ones, even though
-          both forms represent the same semantic character. These are examples
-          of normalizations: regular processes to compose or decompose text in a
-          way that facilitates checking for semantic equivalence.
+          Above, I mentioned that the <em>é</em> grapheme could be expressed as
+          either a single code point or as two separate ones, even though the
+          graphemes for both are semantically identical. These are examples of
+          normalizations: processes to compose or decompose text into code
+          points in a regular way. This is useful when comparing 2 texts for
+          semantic equivalence.
         </P>
 
         <P>
@@ -203,21 +204,21 @@ export default function About() {
           </li>
           <li>
             <P>
-              The comment field from{" "}
+              The name field from{" "}
               <code>
                 <Link
-                  href="https://www.unicode.org/Public/UCD/latest/ucd/Jamo.txt"
+                  href="https://www.unicode.org/Public/UCD/latest/ucd/extracted/DerivedName.txt"
                   className="link"
                 >
-                  Jamo.txt
+                  DerivedName.txt
                 </Link>
               </code>
-              . This field is probably non-standard, but it&apos;s the most
-              helpful.
+              .
             </P>
             <P>
-              Jamo are the alphabetic components of Korean Hangul, and this file
-              enriches those code point names just a little bit more.
+              The names from this file provide more human names to some CJK
+              ideographs and also append Jamo (the alphabetic components of
+              Korean Hangul) to their respective Hangul characters.
             </P>
           </li>
           <li>
