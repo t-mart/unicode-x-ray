@@ -17,8 +17,6 @@ import {
   useContext,
   Suspense,
   useRef,
-  type DependencyList,
-  type EffectCallback,
 } from "react";
 import {
   Select,
@@ -27,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import useSWR, { SWRResponse } from "swr";
 import { getName } from "@/lib/trie";
 import { RefreshCw } from "lucide-react";
@@ -72,8 +70,6 @@ const examples = [
 const textParam = "text";
 const normalizationParam = "norm";
 
-const queryParamDelayMilliseconds = 500;
-
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 const TextContext = createContext<(text: string) => void>(() => {});
@@ -98,7 +94,6 @@ function ExampleListItem({
   description: string;
 }) {
   const setText = useContext(TextContext);
-  const router = useRouter();
   return (
     <li>
       <span
@@ -106,7 +101,6 @@ function ExampleListItem({
           setText(text);
           const params = new URLSearchParams();
           params.set(textParam, text);
-          router.push(`/?${params.toString()}`);
         }}
         role="button"
         className="link select-text inline p-0 m-0"
@@ -214,17 +208,14 @@ function coerceNormalization(value: string): Normalization {
   }
 }
 
-const useDebouncedEffect = (
-  effect: EffectCallback,
-  deps: DependencyList = [],
-  delay: number
-): void => {
-  useEffect(() => {
-    const handler = setTimeout(() => effect(), delay);
-    return () => clearTimeout(handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, delay]);
-};
+function copyToClipboard(text: string, normalization: Normalization) {
+  const url = new URL(window.location.href);
+  url.searchParams.set(textParam, text);
+  if (normalization !== "None") {
+    url.searchParams.set(normalizationParam, normalization);
+  }
+  navigator.clipboard.writeText(url.toString());
+}
 
 function Home() {
   const searchParams = useSearchParams();
@@ -249,55 +240,6 @@ function Home() {
   );
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // form to pushstate
-  useDebouncedEffect(
-    () => {
-      // update the url query params
-      const params = new URLSearchParams();
-
-      if (text) {
-        params.set(textParam, text);
-      } else {
-        params.delete(textParam);
-      }
-
-      if (normalization !== "None") {
-        params.set(normalizationParam, normalization);
-      } else {
-        params.delete(normalizationParam);
-      }
-
-      const newUrl = new URL(window.location.href);
-      newUrl.search = params.toString();
-
-      if (newUrl.toString() !== window.location.href) {
-        window.history.pushState({}, "", newUrl.toString());
-      }
-    },
-    [text, normalization],
-    queryParamDelayMilliseconds
-  );
-
-  useEffect(() => {
-    window.history.replaceState({}, "", window.location.href);
-  });
-
-  // popstate to form
-  useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      setText(params.get(textParam) ?? "");
-      setNormalization(
-        coerceNormalization(params.get(normalizationParam) ?? "None")
-      );
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []);
-
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -314,9 +256,22 @@ function Home() {
               Text
             </Label>
             {text.length > 0 && (
-              <button onClick={() => setText("")} className="link text-sm ml-4">
-                Clear
-              </button>
+              <>
+                <button
+                  onClick={() => setText("")}
+                  className="link text-sm ml-4"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => {
+                    copyToClipboard(text, normalization);
+                  }}
+                  className="link text-sm ml-4"
+                >
+                  Copy link to clipboard
+                </button>
+              </>
             )}
           </div>
           <Input
