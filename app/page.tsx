@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { Grapheme, parse, type Codepoint } from "@/lib/text";
 import Link from "next/link";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, Suspense } from "react";
 import {
   Select,
   SelectContent,
@@ -344,18 +344,20 @@ export default function Page() {
   }, [text, normalization]);
 
   return (
-    <div className="space-y-4">
-      <Form
-        text={text}
-        setText={setText}
-        normalization={normalization}
-        setNormalization={setNormalization}
-      />
-      {parsed.graphemes.length > 0 ? (
-        <Graphemes graphemes={parsed.graphemes} />
-      ) : (
-        <ExampleBox setText={setText} />
-      )}
-    </div>
+    <Suspense>
+      <div className="space-y-4">
+        <Form
+          text={text}
+          setText={setText}
+          normalization={normalization}
+          setNormalization={setNormalization}
+        />
+        {parsed.graphemes.length > 0 ? (
+          <Graphemes graphemes={parsed.graphemes} />
+        ) : (
+          <ExampleBox setText={setText} />
+        )}
+      </div>
+    </Suspense>
   );
 }
