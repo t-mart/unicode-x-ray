@@ -9,7 +9,14 @@ import {
 } from "@/components/ui/popover";
 import { Grapheme, parse, type Codepoint } from "@/lib/text";
 import Link from "next/link";
-import { useState, useMemo, useEffect, useRef, Suspense } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useContext,
+  Suspense,
+} from "react";
 import {
   Select,
   SelectContent,
@@ -20,7 +27,8 @@ import {
 import { useSearchParams, useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import useSWRImmutable from "swr/immutable";
+import { lookupNamesAction } from "@/actions/names";
+import { NamesContext } from "./_context/names";
 
 type Example = [string, string];
 
@@ -161,21 +169,21 @@ function CodepointBox({ codepoint }: { codepoint: Codepoint }) {
 }
 
 function CodepointName({ codepoint }: { codepoint: number }) {
-  const {
-    data: name,
-    error: isError,
-    isLoading: isPending,
-    error,
-  } = useSWRImmutable(`/api/names/${formatCodepoint(codepoint)}`, (url) =>
-    fetch(url)
-      .then((res) => res.json())
-      .then((json) => json.name)
-  );
+  const namesMap = useContext(NamesContext);
+  const [name, setName] = useState<string | null>(null);
 
-  if (isPending) {
+  useEffect(() => {
+    if (name === null) {
+      const retrieved = namesMap.get(codepoint);
+      if (retrieved) {
+        setName(retrieved);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codepoint, namesMap]);
+
+  if (name === null) {
     return <Skeleton className="w-full h-4" />;
-  } else if (isError) {
-    return <span className="text-destructive-foreground">{error.message}</span>;
   } else {
     return (
       <Popover>
@@ -183,7 +191,7 @@ function CodepointName({ codepoint }: { codepoint: number }) {
           <p className="line-clamp-3 decoration-dotted underline">{name}</p>
         </PopoverTrigger>
         <PopoverContent>
-          <p className="text-center">{name ?? "<unknown>"}</p>
+          <p className="text-center">{name}</p>
         </PopoverContent>
       </Popover>
     );
@@ -343,28 +351,44 @@ function XRay() {
     return parse(t, segmenter);
   }, [text, normalization]);
 
+  const [names, setNames] = useState<Map<number, string>>(new Map());
+  useEffect(() => {
+    const codepoints = new Set(
+      parsed.graphemes.flatMap((g) => g.codePoints).flatMap((c) => c.value)
+    ).difference(new Set(names.keys()));
+
+    if (!codepoints.size) {
+      return;
+    }
+
+    lookupNamesAction(codepoints).then((names) => {
+      setNames((prev) => new Map([...prev, ...names]));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parsed]);
+
   return (
-    <Suspense>
-      <div className="space-y-4">
-        <Form
-          text={text}
-          setText={setText}
-          normalization={normalization}
-          setNormalization={setNormalization}
-        />
-        {parsed.graphemes.length > 0 ? (
+    <div className="space-y-4">
+      <Form
+        text={text}
+        setText={setText}
+        normalization={normalization}
+        setNormalization={setNormalization}
+      />
+      {parsed.graphemes.length > 0 ? (
+        <NamesContext.Provider value={names}>
           <Graphemes graphemes={parsed.graphemes} />
-        ) : (
-          <ExampleBox setText={setText} />
-        )}
-      </div>
-    </Suspense>
+        </NamesContext.Provider>
+      ) : (
+        <ExampleBox setText={setText} />
+      )}
+    </div>
   );
 }
 
 export default function Page() {
   return (
-    <Suspense>
+    <Suspense fallback={<p>Loading...</p>}>
       <XRay />
     </Suspense>
   );
