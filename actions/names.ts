@@ -21,5 +21,7 @@ export async function lookupNamesAction(
     }
   });
 
+  console.log(names);
+
   return names;
 }
