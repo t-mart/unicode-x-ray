@@ -1,12 +1,15 @@
 # Handoff: unicode-x-ray review and rework plan
 
-Status: no code changed yet. This document records a review and an agreed plan.
+This document records a review of the original project and the plan that
+replaces it. Section 4 is the live checklist. Tick items as they land.
 
-Original project: /home/tim/code/unicode-x-ray
+Original project: /home/tim/code/unicode-x-ray (Next.js). Read it for
+implementation detail. All new work lands here.
 
-Work through the commits in order. Consult the original project for
-implementation, but new work should land only here. Each commit is independent
-and shippable. Keep the application in a working state after each commit.
+This repository is a fresh TanStack Start scaffold, not a migration. The stack
+is fixed: TanStack Start, TanStack Router (file routes), Vite 8, Tailwind 4,
+Biome, TypeScript 7, pnpm, React 19.2. Half the original commit plan was
+Next.js removal work and no longer applies. Section 4 records what replaced it.
 
 ---
 
@@ -146,6 +149,24 @@ and Unihan definitions. Keep the two values in separate fields.
 
 ---
 
+### 2.7 Measured after implementation
+
+The predictions in §2.5 held. Actual output at Unicode 17.0.0:
+
+| Layer  |     Raw |   brotli | Chunks |
+| ------ | ------: | -------: | -----: |
+| names  | 1.58 MB | 177.8 KB |     83 |
+| defs   | 1.03 MB | 308.2 KB |     26 |
+| blocks |   11 KB |   3.6 KB |      1 |
+
+Largest name chunk: 22.2 KB brotli. 45,851 ranges, 346 blocks.
+
+Two corrections to §2.5. The name layer needs 83 chunks, not 82, because
+Unicode 17 crosses one more boundary. Chunked definitions cost 308 KB against
+the 262 KB single-blob estimate, but they load on demand.
+
+---
+
 ## 3. Decisions
 
 These are settled. Do not reopen them.
@@ -163,7 +184,17 @@ These are settled. Do not reopen them.
 5. **Migrate to Vite and a static build.** Keep Vercel as a deploy target. The
    output must also run on any static file server.
 6. **Remove shadcn and Radix.** Five components do not need the abstraction.
+   Moot in this repository. Write plain elements the first time.
 7. **Split name from definition on disk.** Chunk both by `codepoint >> 12`.
+8. **SPA mode with prerender.** `spa.prerender.outputPath` is `/index.html`, so
+   the shell lands at the root and a plain file server resolves `/`. Route
+   components render on the client. Real paths, never hash locations.
+9. **No analytics.** Plausible does not come across.
+10. **TypeScript 7.** Settled by the scaffold. Open item 1 is closed.
+11. **Biome, not ESLint.** Every ESLint task in the original plan is void.
+12. **Precompression is opt-in.** `gen-data --compress` writes `.br` and `.gz`
+    siblings. Default off, because about 220 binary files that churn every
+    Unicode release are worse than letting the host compress.
 
 ### 3.1 On range naming (answer to question 4)
 
@@ -179,6 +210,12 @@ problems remain:
 - The range labels are the only 6 non-uppercase names in the whole table:
   `Private Use`, `Low Surrogate`, `Plane 15 Private Use`, and 3 more. Every
   other name is uppercase.
+
+Correction, found during implementation: no layer needs per code point
+expansion. `DerivedName.txt` writes CJK, Tangut, Egyptian, Khitan, and Nushu as
+range rows with a `-*` suffix. Strip the suffix and each range collapses to one
+node. Hangul is the only block that is genuinely per code point, because each of
+its 11,172 syllables has a distinct name.
 
 `Blocks.txt` supplies canonical replacements. It is confirmed reachable and it
 is 346 rows:
@@ -199,6 +236,11 @@ Fetch `https://www.unicode.org/Public/UCD/latest/ReadMe.txt`. Apply this regex:
 
 It returns `17.0.0` today. Verified against the live file.
 
+Pin the downloads to that version. The correct base is
+`https://www.unicode.org/Public/<version>/ucd/`. Note that
+`https://www.unicode.org/Public/UCD/<version>/ucd/` returns 404. Only the
+`latest` alias sits under the `UCD` path segment.
+
 ### 3.3 Target data layout
 
 ```
@@ -207,8 +249,11 @@ public/data/blocks.json        346 range rows, 3.5 KB brotli, bundle inline
 public/data/names/0.json       names, run-length encoded, key = cp >> 12
 public/data/names/1.json
 ...
-public/data/defs/4E.json       Unihan definitions, key = cp >> 12
+public/data/defs/4.json        Unihan definitions, key = cp >> 12
 ```
+
+Chunk file names are decimal, not hex. `blocks.json` holds
+`[start, end, name]` rows.
 
 Manifest shape:
 
@@ -236,359 +281,110 @@ run-length encoding gives nothing:
 ```
 
 ---
-
 ## 4. Commit plan
 
 Message format: `[area]: [short line describing the main effect]`. Do not add
 co-author trailers.
 
----
+The original plan had 16 commits. Six were Next.js removal and are void here:
+C1 (no server action exists), C2 (no dead route), C10 (Vite is the scaffold),
+C11 (no Radix to remove), C13 (no Next to remove), and the dependency half of
+C14. The order also flips: the generator comes first, because there is no
+application to keep working.
 
-### C1. `names: return a placeholder instead of a throw`
+- [x] **S1. `build: tighten the TypeScript config and produce static output`**
 
-**Why.** D1 is the worst defect. One unnamed code point blanks the whole page.
-Today 4,807 assigned code points trigger it.
+  Replaces the config half of C14. Set `lib` to ES2025 for
+  `Set.prototype.difference` (D16), plus `moduleDetection`, `erasableSyntaxOnly`,
+  `noUncheckedIndexedAccess`, and `exactOptionalPropertyTypes`. Drop
+  `@tailwindcss/typography` (D14). Point Biome at `scripts/`. Turn on SPA mode
+  and prerender per decision 8.
 
-**Do.**
+  Done: `/`, `/about`, and the assets all return 200 from a plain file server.
 
-- Change `lookupNamesAction` to return a placeholder string when `getName`
-  returns null. Do not throw.
-- Delete `console.log(names)` (D9).
-- Delete the `if (codepoint in names)` guard (D8). It never fires.
-- Add a `.catch` to the `lookupNamesAction(...)` call in `app/page.tsx` (D1).
+- [x] **S2. `gen-data: generate chunked Unicode name and definition data`**
 
-**Do not.** Do not add block names yet. C7 does that. Use a plain `<unknown>`
-string for now.
+  Merges C3 through C6, which produced throwaway intermediate formats on their
+  own. Detects the version, pins the downloads to it, splits name from
+  definition (D7), fixes the C1 controls (D3), names uniform ranges from
+  `Blocks.txt` (decision 4), and writes the §3.3 layout with the manifest last.
 
-**Done when.** Input of `U+0080` or an unassigned code point still shows names
-for every other code point in the string.
+  Done: all 299,382 assigned code points resolve except U+0080, U+0081, U+0084,
+  and U+0099, which fall through to the S3 fallback. See §2.7 for sizes.
 
----
+- [x] **S3. `lib: add chunk lookup and the unknown fallback`**
 
-### C2. `api: delete the unused names route`
+  C7, less the pluggable fetch seam. That seam existed to survive the
+  Next-to-Vite migration, which does not happen here, so the loader calls
+  `fetch` directly. Adds the block lookup and the `<unknown, Block Name>`
+  fallback (decision 2).
 
-**Why.** D5 and D4. The route is dead and it carries a duplicate 3.4 MB file.
+  Change to C12: `manifest.json` and `blocks.json` are bundled inline, but
+  chunk 0 is prefetched on load instead. Chunk 0 is 126 KB raw, and every visit
+  would pay to parse it. A prefetch starts the request before the first
+  keystroke and costs the bundle nothing.
 
-**Do.**
+  Done: `U+0080` shows `<unknown, Latin-1 Supplement>`, `U+0041` shows
+  `LATIN CAPITAL LETTER A`, and U+6F22 resolves a name and a definition from
+  separate chunks.
 
-- Delete `app/api/names/[codepoint]/`, including its `names.json`.
-- Confirm with a grep that nothing references `api/names`.
+- [ ] **S4. `lib: segment text into graphemes and code points`**
 
-**Done when.** The repository is 3.4 MB smaller and the build passes.
+  Port `lib/text.ts`. Keep `Intl.Segmenter` with `granularity: "grapheme"`.
+  Pass an explicit locale, because a shared link must show the same result to
+  everyone (§2.4 item 2).
 
----
+- [ ] **S5. `test: cover the name table, chunking, and segmentation`**
 
-### C3. `gen-data: detect and record the Unicode version`
+  C15. Add `vitest@4`. Round trip, boundary, chunk, and segmentation tests. The
+  property test asserts that every assigned code point resolves, with the four
+  unnamed controls as the known exception.
 
-**Why.** Decision 3. The version drives both the refresh check and the
-interface.
+- [ ] **S6. `app: build the inspector route`**
 
-**Do.**
+  C8 and the UI half of C12. Use `validateSearch` for `?text=`, which makes
+  D10, D11, and D12 unwritable rather than fixed. Show the definition as its own
+  element, not as text inside the name. Show the Unicode version from the
+  manifest. Fetch a definition chunk only when `defChunks` says one exists.
+  Native `<select>`, real `<label>`, no popover: give long names room instead.
 
-- Add a function that fetches `ReadMe.txt` and applies the regex in §3.2.
-- Fail the run if the regex does not match. Do not guess a version.
-- Change the download URLs to pin the detected version. Use
-  `https://www.unicode.org/Public/UCD/<version>/ucd/...` instead of `latest`, so
-  that one run cannot mix two versions.
-- Write the version into the output.
-- Accept an output directory argument, not a file path. Fix D6: point the
-  `gen-data` script in `package.json` at the real destination.
+- [ ] **S7. `app: write the about page`**
 
-**Done when.** A run prints the detected version and writes it to the output.
+  The correction half of C16. Extended grapheme clusters are not the units a
+  reader of Devanagari perceives (D15). The examples contradict the old claim.
+  Explain the difference, and document the version skew: the browser supplies
+  segmentation, the data file supplies names, and the two versions can differ.
 
----
+- [ ] **S8. `ci: refresh the Unicode data monthly`**
 
-### C4. `gen-data: separate the name from the definition`
+  C9 unchanged. `workflow_dispatch` plus a monthly cron,
+  `permissions: contents: write`, compare the manifest version against §3.2,
+  exit clean when they match, commit `data: update to Unicode <version>` when
+  they differ. Guard against forks.
 
-**Why.** D7. The fused format cannot be parsed back. §2.6 proves it.
+- [ ] **S9. `docs: write the README`**
 
-**Do.**
-
-- Stop the `` `${name} (${definition})` `` concatenation.
-- Build two maps: names, and Unihan definitions.
-- Fix D3 in the same pass. When a `Cc` code point has an empty Unicode 1.0 name,
-  keep the code point and mark it for the unknown fallback. Do not emit an empty
-  string, because `rangeTrieify` drops falsy names.
-- Update `scripts/gen-data/README.md` to match the code (D13).
-
-**Done when.** The two layers are separate, and the CJK ideograph range
-collapses to a small number of name nodes. See §2.5.
-
----
-
-### C5. `gen-data: name large uniform ranges from the block table`
-
-**Why.** Decision 4 and §3.1.
-
-**Do.**
-
-- Download and parse `Blocks.txt`. Emit it as `blocks.json`.
-- Stop the per code point expansion of `<..., First>` and `<..., Last>` rows for
-  surrogates and private use. Emit one range node each.
-- Use the canonical block name for those ranges.
-- Keep the expansion for ranges that `DerivedName.txt` refines, such as Hangul
-  syllables and CJK ideographs. Those need per code point names.
-
-**Done when.** No non-uppercase names remain except the block names, and the
-generator holds far fewer map entries.
-
----
-
-### C6. `gen-data: emit chunked data files and a manifest`
-
-**Why.** Decision 7. §2.5 gives the sizes.
-
-**Do.**
-
-- Emit the layout in §3.3. Use `chunkBits = 12`.
-- Write the manifest last, so that a failed run does not leave a manifest that
-  claims chunks exist.
-- List only non-empty chunks in the manifest.
-- Emit `.br` and `.gz` siblings for each chunk. Brotli quality 11 is too slow to
-  run per request, so precompress at build time. Vercel compresses static assets
-  by itself, but a self-hosted server needs the files.
-
-**Done when.** 82 name chunks exist, none larger than about 22 KB brotli, and
-the manifest reports version 17.0.0.
-
----
-
-### C7. `lib: add chunk lookup and the unknown fallback`
-
-**Why.** The lookup must find the chunk before it searches within it.
-
-**Do.**
-
-- Rename `lib/trie.ts`. It is a sorted range array, not a trie. `lib/names.ts`
-  is accurate.
-- Keep `getName` as the within-chunk binary search. It is correct.
-- Add a chunk loader with a pluggable fetch function. The server action uses a
-  file reader now. The browser uses `fetch` after C12. This seam avoids a
-  rewrite at migration time.
-- Add the block lookup and the `<unknown, Block Name>` fallback (decision 2).
-  Return `<unknown>` when no block matches.
-- Replace the C1 placeholder with this fallback.
-
-**Done when.** `U+11B60` shows `<unknown, ...>` with the correct block name, and
-`U+0041` shows `LATIN CAPITAL LETTER A`.
-
----
-
-### C8. `app: read names and definitions from the chunked data`
-
-**Why.** Connects the new data to the running application.
-
-**Do.**
-
-- Point the server action at the chunk loader.
-- Show the definition as a separate element from the name, not as text inside
-  it.
-- Fetch a definition chunk only when a code point in that chunk has one. The
-  manifest `defChunks` list makes this a cheap check.
-- Show the Unicode version from the manifest somewhere in the layout (decision
-  3).
-
-**Note.** The server action is temporary. C12 deletes it. The chunk logic lives
-in `lib/`, so only about 20 lines are discarded.
-
-**Done when.** CJK input shows a name and a definition, and the version appears
-in the interface.
-
----
-
-### C9. `ci: add a workflow to refresh the Unicode data`
-
-**Why.** D2 returns every September without automation.
-
-**Do.**
-
-- Add `.github/workflows/refresh-unicode-data.yml`.
-- Triggers: `workflow_dispatch`, and `schedule` on a monthly cron.
-- Set `permissions: contents: write`.
-- Steps: check out, set up Node, read `unicodeVersion` from the committed
-  manifest, fetch the latest version per §3.2, and compare.
-- Stop with success if the two versions match. Do not commit.
-- Run the generator and commit the output if the versions differ.
-- Use commit message `data: update to Unicode <version>`.
-- Guard the job so that it does not run on forks.
-
-**Done when.** A manual run on current data exits without a commit, and a run
-with an edited manifest version produces a commit.
-
----
-
-### C10. `build: add Vite beside Next`
-
-**Why.** Decision 5. Add the new build before the old one is removed, so that
-the repository always builds.
-
-**Do.**
-
-- Add `vite@8`, `@vitejs/plugin-react@6`, `@tailwindcss/vite@4.3`.
-- Add `index.html` and a React entry point.
-- Migrate Tailwind 3 to Tailwind 4. Replace `tailwind.config.ts` with an
-  `@theme` block in the CSS. Replace `@tailwind base/components/utilities` with
-  `@import "tailwindcss"`.
-- Drop `@tailwindcss/typography` (D14) and `tailwindcss-animate`. Delete
-  `postcss.config.mjs`.
-- Convert the shadcn HSL triplet variables to real color values.
-
-**Done when.** `vite build` produces a static bundle. Next still builds too.
-
----
-
-### C11. `ui: replace the Radix and shadcn components`
-
-**Why.** Decision 6.
-
-**Do.**
-
-- `Label` becomes `<label>`. The input has a real `id`.
-- `Input` becomes `<input>` with classes.
-- `Skeleton` becomes a `div` with `animate-pulse`.
-- `Select` becomes a native `<select>`. Five options need no custom widget.
-  Native gives keyboard, mobile, and screen reader behaviour at no cost.
-- `Popover` goes away. It exists only because `line-clamp-3` truncates long
-  names, and the long names are the ones with definitions. C8 already moved the
-  definition to its own element. Change the card layout so long text has room,
-  then delete the interaction.
-- Remove `@radix-ui/*`, `class-variance-authority`, and `tailwind-merge`.
-- Inline the two Lucide icons (`RefreshCw`, `ArrowLeft`) and remove
-  `lucide-react`.
-- Delete `components/ui/` and `components.json`.
-
-**Done when.** No Radix package remains and every control still works with a
-keyboard.
-
----
-
-### C12. `app: port routing and fetch chunks in the browser`
-
-**Why.** Removes the last Next-specific runtime code.
-
-**Do.**
-
-- Add `react-router@8`. Use declarative mode. There is no framework mode, no
-  loaders, and no server. `react-router-dom` no longer exists as a package.
-- Replace `next/link` with the router link.
-- Replace `useSearchParams` and `useRouter` with `URLSearchParams` and the
-  History API.
-- Replace `next/script` for Plausible with a plain script tag in `index.html`.
-  Correct the `NEXT_PUBLIC_PLAUSIBLE_DOMIAN` spelling while renaming the
-  variables.
-- Delete `actions/names.ts` and its JSON. Point the C7 chunk loader at `fetch`.
-- Bundle chunk `0` and `blocks.json` into the JavaScript, so that the first
-  keystroke needs no network round trip.
-- Fix D10, D11, and D12 in this pass, because all three sit in the code being
-  moved:
-  - Copy the examples array before the shuffle. Use Fisher-Yates.
-  - Remove or explain the `router.push("/")` on mount.
-  - Read the name straight from context during render. Delete the state and the
-    effect, and the `eslint-disable` with them.
-- Pass an explicit locale to `Intl.Segmenter` (§2.4 item 2).
-
-**Done when.** The Vite build runs the whole application with no server, and a
-shared `?text=` link still works.
-
----
-
-### C13. `build: remove Next`
-
-**Do.**
-
-- Remove `next`, `eslint-config-next`, and `next-env.d.ts`.
-- Add `eslint-plugin-react-hooks` directly. `eslint-config-next` supplied it,
-  and two disable comments depend on the rule.
-- Move `app/` to `src/`.
-- Add a Vercel static build configuration.
-- Confirm the build serves correctly from a plain file server.
-
-**Done when.** No Next package remains and both deploy paths work.
-
----
-
-### C14. `build: update the TypeScript config and dependencies`
-
-**Do.**
-
-- Application config: `module: preserve`, `moduleResolution: bundler`,
-  `target: es2022`, `lib: ["es2025", "dom", "dom.iterable"]`, `jsx: react-jsx`,
-  `noEmit`, `verbatimModuleSyntax`, `moduleDetection: force`,
-  `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
-  `erasableSyntaxOnly`.
-- `lib` must include ES2025 because of `Set.prototype.difference` (D16).
-- `noUncheckedIndexedAccess` makes `trie[mid]` possibly undefined. Handle it.
-  This is the one place where an off-by-one gives a wrong name instead of a
-  crash.
-- Scripts config: `module: nodenext`, `moduleResolution: nodenext`.
-- Consider removal of `tsx`. Node 26 runs TypeScript directly by type stripping.
-  The generator uses no enums, namespaces, or parameter properties, so it is
-  erasable. Native stripping does not resolve the `@/` alias. Change the import
-  to a `#` subpath in `package.json` or to a relative path, and add explicit
-  `.ts` extensions.
-- Upgrade: `react` and `react-dom` to 19.2, `eslint` to 10, `typescript-eslint`
-  to 8.66.
-- Keep `yauzl-promise`. Node still has no zip reader.
-- Add `.gitattributes` with `* text=auto eol=lf` (D17).
-
-**Ask the user first.** TypeScript 7.0.2 is the native Go compiler. It is fast
-and current, but it is young. Confirm before the upgrade from 5.7.
-
----
-
-### C15. `test: cover the name table and segmentation`
-
-**Why.** There are no tests. The pure functions are the cheap targets, and a
-property test catches the class of defect in D1 and D3.
-
-**Do.**
-
-- Add `vitest@4`.
-- Round trip test: build a map, encode it, and assert that every code point
-  reads back the same name.
-- Property test: assert that no assigned code point in the source data returns
-  null. This is the guard for D1 and D3.
-- Boundary tests for the binary search: first node, last node, a gap between
-  ranges, a code point below the first node, and a code point above the last.
-- Chunk test: assert that a code point resolves the same through the chunk
-  loader as through a single table.
-- Segmentation tests: an emoji ZWJ sequence, a regional indicator pair, a
-  combining sequence, and a lone surrogate.
-
----
-
-### C16. `docs: rewrite the README and correct the About page`
-
-**Do.**
-
-- Replace the `create-next-app` README. Describe the tool, the build, the data
-  generation, and the refresh workflow.
-- Correct the About page grapheme claim (D15). Extended grapheme clusters are
-  not the units that a reader of Devanagari perceives. The application already
-  shows नमस्ते, မင်္ဂလာပါ, ꦱꦸꦒꦼꦁꦱꦶꦪꦁ, and สวัสดี as examples, so the page
-  contradicts itself. Explain the difference. It is the most interesting thing
-  the tool teaches.
-- Document the version skew: the browser supplies segmentation, the data file
-  supplies names, and the two versions can differ.
-- Update the naming section for the split of name and definition, and for the
-  block-derived names.
-
----
+  The rest of C16. Describe the tool, the build, the data generation, and the
+  refresh workflow. Delete the scaffold README text.
 
 ## 5. Open items
 
-1. **TypeScript 7 upgrade.** See C14. Needs a decision.
-2. **Definition chunk granularity.** 4096 is chosen for names. Definitions are
-   sparse and cluster in the Han blocks. A finer split serves a two-character
-   input better. Measure before a change.
+1. ~~TypeScript 7 upgrade.~~ Closed by decision 10.
+2. ~~Definition chunk granularity.~~ Closed. Both layers use 4096. Revisit only
+   with a measurement that shows a real cost.
 3. **Should a lone surrogate get a name?** One can arrive from a damaged
-   `?text=` parameter. Today it resolves to a block name. That is defensible.
+   `?text=` parameter. Today it resolves to `High Surrogates` or
+   `Low Surrogates` from the block table. That is defensible.
+4. **`/about` is not in the HTML source.** SPA mode renders route components on
+   the client. Set `ssr: true` on that route alone if the prose must be
+   crawlable.
 
 ## 6. Verification commands
 
 ```
-npx tsc --noEmit
-npx vitest run
-npm run gen-data
-npx vite build
+pnpm typecheck
+pnpm check
+pnpm test
+pnpm gen-data
+pnpm build
 ```
