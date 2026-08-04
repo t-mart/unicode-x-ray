@@ -1,43 +1,40 @@
 {
-  "name": "unicode-x-ray",
-  "version": "0.1.0",
+  "name": "unicode-x-ray-2",
   "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "gen-data": "tsx --tsconfig ./tsconfig.scripts.json ./scripts/gen-data/main.ts public/names.json"
+    "dev": "vite dev --port 3000",
+    "generate-routes": "tsr generate",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "biome format",
+    "lint": "biome lint",
+    "check": "biome check"
   },
   "dependencies": {
-    "@radix-ui/react-label": "^2.1.0",
-    "@radix-ui/react-popover": "^1.1.2",
-    "@radix-ui/react-select": "^2.1.2",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.473.0",
-    "next": "^15.1.5",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7"
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-devtools": "latest",
+    "@tanstack/react-router": "latest",
+    "@tanstack/react-router-devtools": "latest",
+    "@tanstack/react-start": "latest",
+    "nitro": "3.0.260610-beta",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.16.0",
-    "@tailwindcss/typography": "^0.5.15",
-    "@types/node": "^22",
-    "@types/react": "^19.0.7",
-    "@types/react-dom": "^19.0.3",
-    "@types/yauzl-promise": "^4.0.1",
-    "eslint": "^9.16.0",
-    "eslint-config-next": "^15.1.5",
-    "eslint-plugin-react": "^7.37.2",
-    "globals": "^15.13.0",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "tsx": "^4.19.2",
-    "typescript": "^5",
-    "typescript-eslint": "^8.16.0",
-    "yauzl-promise": "^4.0.0"
+    "@biomejs/biome": "2.4.5",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tanstack/devtools-vite": "latest",
+    "@tanstack/router-cli": "^1.167.21",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.0"
   }
 }
