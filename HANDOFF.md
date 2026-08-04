@@ -195,6 +195,12 @@ These are settled. Do not reopen them.
 12. **Precompression is opt-in.** `gen-data --compress` writes `.br` and `.gz`
     siblings. Default off, because about 220 binary files that churn every
     Unicode release are worse than letting the host compress.
+13. **TanStack Query fetches the chunks.** Not for the caching. The files are
+    immutable, so they never go stale and never refetch. The reason is
+    reactivity: a module-level cache is invisible to React, and bridging it with
+    an effect rebuilds the D12 defect. Query makes chunk arrival a render
+    dependency. Keep lookups pure and let Query be the only cache. No SSR
+    dehydration is needed, because SPA mode runs no route code on the server.
 
 ### 3.1 On range naming (answer to question 4)
 
@@ -315,14 +321,17 @@ application to keep working.
 - [x] **S3. `lib: add chunk lookup and the unknown fallback`**
 
   C7, less the pluggable fetch seam. That seam existed to survive the
-  Next-to-Vite migration, which does not happen here, so the loader calls
-  `fetch` directly. Adds the block lookup and the `<unknown, Block Name>`
-  fallback (decision 2).
+  Next-to-Vite migration, which does not happen here. Adds the block lookup and
+  the `<unknown, Block Name>` fallback (decision 2).
+
+  TanStack Query owns the cache (decision 13). `unicode.ts` holds pure
+  functions only. `unicode-query.ts` holds the query options and the
+  `useCodepointInfo` hook.
 
   Change to C12: `manifest.json` and `blocks.json` are bundled inline, but
-  chunk 0 is prefetched on load instead. Chunk 0 is 126 KB raw, and every visit
-  would pay to parse it. A prefetch starts the request before the first
-  keystroke and costs the bundle nothing.
+  chunk 0 is prefetched instead. Chunk 0 is 126 KB raw, and every visit would
+  pay to parse it. A prefetch in `getRouter` starts the request before the
+  first keystroke and costs the bundle nothing.
 
   Done: `U+0080` shows `<unknown, Latin-1 Supplement>`, `U+0041` shows
   `LATIN CAPITAL LETTER A`, and U+6F22 resolves a name and a definition from
