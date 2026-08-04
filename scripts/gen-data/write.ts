@@ -34,7 +34,9 @@ function* byChunk(range: NameRange): Generator<[number, NameRange]> {
 	}
 }
 
-function groupNames(ranges: readonly NameRange[]): Map<number, NameRange[]> {
+export function groupNames(
+	ranges: readonly NameRange[],
+): Map<number, NameRange[]> {
 	const chunks = new Map<number, NameRange[]>();
 
 	for (const range of ranges) {
@@ -51,7 +53,7 @@ function groupNames(ranges: readonly NameRange[]): Map<number, NameRange[]> {
 	return chunks;
 }
 
-function groupDefinitions(
+export function groupDefinitions(
 	definitions: ReadonlyMap<number, string>,
 ): Map<number, [number, string][]> {
 	const chunks = new Map<number, [number, string][]>();

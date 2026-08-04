@@ -363,11 +363,27 @@ application to keep working.
   pair splits into two, `\r\n` stays one, and combining marks join the letter
   before them. §2.4 item 3 now records what ICU 78.3 measures.
 
-- [ ] **S5. `test: cover the name table, chunking, and segmentation`**
+- [x] **S5. `test: cover the name table, chunking, and segmentation`**
 
-  C15. Add `vitest@4`. Round trip, boundary, chunk, and segmentation tests. The
-  property test asserts that every assigned code point resolves, with the four
-  unnamed controls as the known exception.
+  C15. vitest 4, with `vitest.config.ts` separate from `vite.config.ts`: the
+  tests need no router, no Nitro, and no Tailwind. 35 tests in 1.1 s.
+
+  | File                            | Covers                                    |
+  | ------------------------------- | ----------------------------------------- |
+  | `src/lib/names.test.ts`         | Run length round trip, merges, boundaries |
+  | `src/lib/text.test.ts`          | Segmentation, including the D15 evidence  |
+  | `src/lib/unicode.test.ts`       | Block search, fallbacks, chunk arithmetic |
+  | `scripts/gen-data/write.test.ts`| Chunk splitting, definition grouping      |
+  | `src/lib/data.test.ts`          | The generated files themselves            |
+
+  The property test uses the runtime as an independent oracle: every code point
+  that `\p{Assigned}` matches must resolve to a name. It reports exactly the
+  four unnamed controls U+0080, U+0081, U+0084, and U+0099. The oracle holds
+  only while the runtime and the data file agree on the Unicode version, so the
+  test skips when they differ. Node 26.5.1 carries ICU 78.3 and Unicode 17.0,
+  and the data file is 17.0.0.
+
+  `groupNames` and `groupDefinitions` are now exported from `write.ts`.
 
 - [ ] **S6. `app: build the inspector route`**
 
