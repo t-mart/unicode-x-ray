@@ -98,9 +98,21 @@ The segmentation is correct. Three facts still need attention:
    has no grapheme tailorings outside root, so output is stable in practice.
    Pass an explicit locale anyway, because a shared link must show the same
    result to everyone.
-3. **Extended grapheme clusters are not aksharas.** Indic and Southeast Asian
-   text breaks at virama joins. This is correct UAX #29 behaviour. The About
-   page text contradicts it (D15).
+3. **Extended grapheme clusters are not aksharas.** This is correct UAX #29
+   behaviour. The About page text contradicts it (D15). Measured on ICU 78.3,
+   which carries UAX #29 rule GB9c:
+
+   | Input      | Clusters              |
+   | ---------- | --------------------- |
+   | `क्ष`      | `क्ष`                 |
+   | `हिन्दी`   | `हि` / `न्दी`         |
+   | `ကျွန်ုပ်` | `ကျွ` / `န်ု` / `ပ်`  |
+   | `ไทย`      | `ไ` / `ท` / `ย`       |
+   | `ꦧꦱꦗꦮ`     | `ꦧ` / `ꦱ` / `ꦗ` / `ꦮ` |
+
+   Devanagari conjuncts hold together, so the old "breaks at virama joins" note
+   was wrong for this ICU version. Thai still splits a prepended vowel from its
+   consonant, and Javanese splits every letter. The claim is false either way.
 
 ### 2.5 Data measurements
 
@@ -337,11 +349,19 @@ application to keep working.
   `LATIN CAPITAL LETTER A`, and U+6F22 resolves a name and a definition from
   separate chunks.
 
-- [ ] **S4. `lib: segment text into graphemes and code points`**
+- [x] **S4. `lib: segment text into graphemes and code points`**
 
-  Port `lib/text.ts`. Keep `Intl.Segmenter` with `granularity: "grapheme"`.
-  Pass an explicit locale, because a shared link must show the same result to
-  everyone (§2.4 item 2).
+  `src/lib/text.ts`. `Intl.Segmenter` with `granularity: "grapheme"` and the
+  explicit locale `en`, because a shared link must show the same result to
+  everyone (§2.4 item 2). `segment(text)` returns graphemes; `codepointValues`
+  flattens them for `useCodepointInfo`.
+
+  Change: the `Text` wrapper type is gone. It held the input string, which the
+  caller already has.
+
+  Done: emoji with a skin tone modifier and a ZWJ stay one grapheme, a flag
+  pair splits into two, `\r\n` stays one, and combining marks join the letter
+  before them. §2.4 item 3 now records what ICU 78.3 measures.
 
 - [ ] **S5. `test: cover the name table, chunking, and segmentation`**
 
