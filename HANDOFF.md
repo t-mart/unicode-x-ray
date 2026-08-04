@@ -213,6 +213,12 @@ These are settled. Do not reopen them.
     an effect rebuilds the D12 defect. Query makes chunk arrival a render
     dependency. Keep lookups pure and let Query be the only cache. No SSR
     dehydration is needed, because SPA mode runs no route code on the server.
+14. **Inline data lives in `src/data`, fetched data in `public/data`.** Vite
+    refuses to import anything under `public`, and the dev server fails with an
+    error. The generator writes the manifest and the blocks to `src/data`, which
+    the bundle inlines, and the name and definition chunks to `public/data`,
+    which the browser fetches by URL. `--inline-output` sets the first path,
+    `--output` the second.
 
 ### 3.1 On range naming (answer to question 4)
 
@@ -385,13 +391,23 @@ application to keep working.
 
   `groupNames` and `groupDefinitions` are now exported from `write.ts`.
 
-- [ ] **S6. `app: build the inspector route`**
+- [x] **S6. `app: build the inspector route`**
 
-  C8 and the UI half of C12. Use `validateSearch` for `?text=`, which makes
-  D10, D11, and D12 unwritable rather than fixed. Show the definition as its own
-  element, not as text inside the name. Show the Unicode version from the
-  manifest. Fetch a definition chunk only when `defChunks` says one exists.
-  Native `<select>`, real `<label>`, no popover: give long names room instead.
+  C8 and the UI half of C12. `validateSearch` reads `?text=` and `?norm=`, and
+  the URL is the only state. Nothing copies it into a component, so D11 and D12
+  are unwritable. `pickExamples` shuffles a copy, so D10 is unwritable, and the
+  first render takes the first three examples so the prerendered HTML matches.
+  The definition is its own element under the name. Native `<select>`, real
+  `<label>`, no popover. The card is 11 rem wide and lets a long name wrap.
+
+  Added: `useCodepointInfo` now reports `pending` per code point. A chunk that
+  has not arrived shows "Loading" instead of the block fallback, which would
+  otherwise read as a real answer. `segment` now records the offset of each
+  grapheme and code point, which gives React a stable key for repeated
+  characters.
+
+  Also replaced the scaffold branding in `Header`, `Footer`, and the document
+  title. The footer carries the data version.
 
 - [ ] **S7. `app: write the about page`**
 

@@ -1,11 +1,14 @@
+/** The offset is the position in the input string. It identifies a duplicate. */
 export type Codepoint = {
 	readonly value: number;
 	readonly string: string;
+	readonly offset: number;
 };
 
 export type Grapheme = {
 	readonly codepoints: readonly Codepoint[];
 	readonly string: string;
+	readonly offset: number;
 };
 
 /**
@@ -21,13 +24,21 @@ const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
  * point stays one entry.
  */
 export function segment(text: string): Grapheme[] {
-	return [...segmenter.segment(text)].map(({ segment: string }) => ({
-		codepoints: Array.from(string, (character) => ({
-			value: character.codePointAt(0) ?? 0,
-			string: character,
-		})),
-		string,
-	}));
+	return [...segmenter.segment(text)].map(({ segment: string, index }) => {
+		let offset = index;
+
+		const codepoints = Array.from(string, (character) => {
+			const codepoint = {
+				value: character.codePointAt(0) ?? 0,
+				string: character,
+				offset,
+			};
+			offset += character.length;
+			return codepoint;
+		});
+
+		return { codepoints, string, offset: index };
+	});
 }
 
 export function codepointValues(

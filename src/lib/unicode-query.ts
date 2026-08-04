@@ -13,7 +13,11 @@ export type CodepointInfo = {
 	codepoint: number;
 	name: string;
 	definition: string | null;
+	/** The name chunk exists but has not arrived, so the name is a placeholder. */
+	pending: boolean;
 };
+
+type ChunkState<T> = { data: T | undefined; pending: boolean };
 
 async function fetchChunk<T>(kind: string, chunk: number): Promise<T> {
 	const url = `${import.meta.env.BASE_URL}data/${kind}/${chunk}.json`;
@@ -65,19 +69,33 @@ export function useCodepointInfo(
 
 	const names = useQueries({
 		queries: nameChunks.map(nameChunkQuery),
-		combine: (results) =>
-			new Map(nameChunks.map((c, i) => [c, results[i]?.data])),
+		combine: (results): Map<number, ChunkState<NameNode[]>> =>
+			new Map(
+				nameChunks.map((chunk, index) => [
+					chunk,
+					{
+						data: results[index]?.data,
+						pending: results[index]?.isPending ?? false,
+					},
+				]),
+			),
 	});
 
 	const definitions = useQueries({
 		queries: defChunks.map(defChunkQuery),
-		combine: (results) =>
-			new Map(defChunks.map((c, i) => [c, results[i]?.data])),
+		combine: (results): Map<number, DefinitionEntry[] | undefined> =>
+			new Map(defChunks.map((chunk, index) => [chunk, results[index]?.data])),
 	});
 
-	return codepoints.map((codepoint) => ({
-		codepoint,
-		name: nameIn(codepoint, names.get(chunkOf(codepoint))),
-		definition: definitionIn(codepoint, definitions.get(chunkOf(codepoint))),
-	}));
+	return codepoints.map((codepoint) => {
+		const chunk = chunkOf(codepoint);
+		const nameChunk = names.get(chunk);
+
+		return {
+			codepoint,
+			name: nameIn(codepoint, nameChunk?.data),
+			definition: definitionIn(codepoint, definitions.get(chunk)),
+			pending: nameChunk?.pending ?? false,
+		};
+	});
 }

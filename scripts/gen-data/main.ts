@@ -54,6 +54,7 @@ async function main() {
 	const { values } = parseArgs({
 		options: {
 			output: { type: "string", default: "public/data" },
+			"inline-output": { type: "string", default: "src/data" },
 			version: { type: "string" },
 			"cache-dir": { type: "string", default: defaultCacheDir },
 			compress: { type: "boolean", default: false },
@@ -91,6 +92,7 @@ async function main() {
 
 	const manifest = await writeData({
 		outputDir: path.resolve(values.output),
+		inlineDir: path.resolve(values["inline-output"]),
 		version,
 		names,
 		definitions,
@@ -102,7 +104,7 @@ async function main() {
 		`${names.length} ranges, ${manifest.nameChunks.length} name chunks, ` +
 			`${manifest.defChunks.length} definition chunks, ${blocks.length} blocks`,
 	);
-	console.log(`wrote ${values.output}`);
+	console.log(`wrote ${values.output} and ${values["inline-output"]}`);
 }
 
 await main();

@@ -1,87 +1,276 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { type Example, examples, pickExamples } from "../lib/examples.ts";
+import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
+import { manifest } from "../lib/unicode.ts";
+import { type CodepointInfo, useCodepointInfo } from "../lib/unicode-query.ts";
 
-export const Route = createFileRoute("/")({ component: App });
+const normalizations = ["NFC", "NFD", "NFKC", "NFKD"] as const;
+type Normalization = (typeof normalizations)[number];
 
-function App() {
+type Search = { text?: string; norm?: Normalization };
+
+/**
+ * The URL is the only state. Nothing copies it into a component, so a shared
+ * link and a typed character take the same path.
+ */
+function buildSearch(text: string, norm: Normalization | undefined): Search {
+	if (!text) {
+		return {};
+	}
+
+	return norm ? { text, norm } : { text };
+}
+
+export const Route = createFileRoute("/")({
+	component: XRay,
+	validateSearch: (search: Record<string, unknown>): Search => {
+		const text = typeof search.text === "string" ? search.text : "";
+		const norm = normalizations.find((value) => value === search.norm);
+		return buildSearch(text, norm);
+	},
+	head: () => ({
+		meta: [
+			{ title: "Unicode X-Ray" },
+			{
+				name: "description",
+				content:
+					"Split text into graphemes and code points, and name every one.",
+			},
+		],
+	}),
+});
+
+function formatCodepoint(codepoint: number): string {
+	return codepoint.toString(16).toUpperCase().padStart(4, "0");
+}
+
+function XRay() {
+	const { text = "", norm } = Route.useSearch();
+	const navigate = Route.useNavigate();
+
+	const update = (nextText: string, nextNorm: Normalization | undefined) => {
+		void navigate({ search: buildSearch(nextText, nextNorm), replace: true });
+	};
+
+	const graphemes = useMemo(
+		() => segment(norm ? text.normalize(norm) : text),
+		[text, norm],
+	);
+	const codepoints = useMemo(
+		() => [...new Set(codepointValues(graphemes))],
+		[graphemes],
+	);
+	const info = useCodepointInfo(codepoints);
+	const byCodepoint = new Map(info.map((entry) => [entry.codepoint, entry]));
+
 	return (
-		<main className="page-wrap px-4 pb-8 pt-14">
-			<section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-14">
-				<div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-				<div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
-				<p className="island-kicker mb-3">TanStack Start Base Template</p>
-				<h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
-					Start simple, ship quickly.
-				</h1>
-				<p className="mb-8 max-w-2xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
-					This base starter intentionally keeps things light: two routes, clean
-					structure, and the essentials you need to build from scratch.
-				</p>
-				<div className="flex flex-wrap gap-3">
-					<a
-						href="/about"
-						className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
-					>
-						About This Starter
-					</a>
-					<a
-						href="https://tanstack.com/router"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)]"
-					>
-						Router Guide
-					</a>
-				</div>
-			</section>
+		<main className="demo-page demo-page-wide">
+			<h1 className="demo-title display-title mb-2">Unicode X-Ray</h1>
+			<p className="demo-muted mb-8 max-w-2xl">
+				Paste text. See the graphemes your reader sees, the code points behind
+				them, and the name of every one.
+			</p>
 
-			<section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				{[
-					[
-						"Type-Safe Routing",
-						"Routes and links stay in sync across every page.",
-					],
-					[
-						"Server Functions",
-						"Call server code from your UI without creating API boilerplate.",
-					],
-					[
-						"Streaming by Default",
-						"Ship progressively rendered responses for faster experiences.",
-					],
-					[
-						"Tailwind Native",
-						"Design quickly with utility-first styling and reusable tokens.",
-					],
-				].map(([title, desc], index) => (
-					<article
-						key={title}
-						className="island-shell feature-card rise-in rounded-2xl p-5"
-						style={{ animationDelay: `${index * 90 + 80}ms` }}
-					>
-						<h2 className="mb-2 text-base font-semibold text-[var(--sea-ink)]">
-							{title}
-						</h2>
-						<p className="m-0 text-sm text-[var(--sea-ink-soft)]">{desc}</p>
-					</article>
-				))}
-			</section>
+			<Form text={text} norm={norm} update={update} />
 
-			<section className="island-shell mt-8 rounded-2xl p-6">
-				<p className="island-kicker mb-2">Quick Start</p>
-				<ul className="m-0 list-disc space-y-2 pl-5 text-sm text-[var(--sea-ink-soft)]">
-					<li>
-						Edit <code>src/routes/index.tsx</code> to customize the home page.
-					</li>
-					<li>
-						Update <code>src/components/Header.tsx</code> and{" "}
-						<code>src/components/Footer.tsx</code> for brand links.
-					</li>
-					<li>
-						Add routes in <code>src/routes</code> and tweak visual tokens in{" "}
-						<code>src/styles.css</code>.
-					</li>
-				</ul>
-			</section>
+			{graphemes.length > 0 ? (
+				<Graphemes graphemes={graphemes} byCodepoint={byCodepoint} />
+			) : (
+				<Examples onPick={(picked) => update(picked, norm)} />
+			)}
+
+			<p className="demo-muted mt-10 text-sm">
+				Names come from Unicode {manifest.unicodeVersion}, generated{" "}
+				{manifest.generated}. Segmentation comes from your browser, which may
+				know a different version. <Link to="/about">More about that.</Link>
+			</p>
 		</main>
+	);
+}
+
+function Form({
+	text,
+	norm,
+	update,
+}: {
+	text: string;
+	norm: Normalization | undefined;
+	update: (text: string, norm: Normalization | undefined) => void;
+}) {
+	const [copied, setCopied] = useState(false);
+
+	async function copyLink() {
+		await navigator.clipboard.writeText(window.location.href);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 2000);
+	}
+
+	return (
+		<div className="demo-panel grid gap-4 sm:grid-cols-[3fr_1fr]">
+			<div>
+				<label className="demo-section-title mb-2 block" htmlFor="text">
+					Text
+				</label>
+				<input
+					className="demo-input"
+					id="text"
+					value={text}
+					placeholder="Put your text here"
+					// biome-ignore lint/a11y/noAutofocus: the input is the whole point of the page
+					autoFocus
+					onChange={(event) => update(event.target.value, norm)}
+				/>
+			</div>
+
+			<div>
+				<label className="demo-section-title mb-2 block" htmlFor="norm">
+					Normalization
+				</label>
+				<select
+					className="demo-select"
+					id="norm"
+					value={norm ?? ""}
+					onChange={(event) =>
+						update(
+							text,
+							normalizations.find((value) => value === event.target.value),
+						)
+					}
+				>
+					<option value="">None</option>
+					{normalizations.map((value) => (
+						<option key={value} value={value}>
+							{value}
+						</option>
+					))}
+				</select>
+			</div>
+
+			{text.length > 0 && (
+				<div className="flex flex-wrap gap-3 sm:col-span-2">
+					<button
+						type="button"
+						className="demo-button demo-button-secondary"
+						onClick={() => update("", norm)}
+					>
+						Clear
+					</button>
+					<button
+						type="button"
+						className="demo-button demo-button-secondary"
+						onClick={copyLink}
+					>
+						{copied ? "Link copied" : "Copy link"}
+					</button>
+				</div>
+			)}
+		</div>
+	);
+}
+
+function Graphemes({
+	graphemes,
+	byCodepoint,
+}: {
+	graphemes: readonly Grapheme[];
+	byCodepoint: ReadonlyMap<number, CodepointInfo>;
+}) {
+	return (
+		<section className="mt-8">
+			<h2 className="demo-section-title mb-4 text-xl">
+				{graphemes.length} grapheme{graphemes.length === 1 ? "" : "s"}
+			</h2>
+			<ol className="flex flex-col gap-4">
+				{graphemes.map((grapheme) => (
+					<li key={grapheme.offset} className="flex items-center gap-4">
+						<p className="w-24 min-w-24 text-center text-5xl">
+							{grapheme.string}
+						</p>
+						<ol className="flex flex-row gap-3 overflow-x-auto py-2">
+							{grapheme.codepoints.map((codepoint) => (
+								<CodepointCard
+									key={codepoint.offset}
+									glyph={codepoint.string}
+									info={byCodepoint.get(codepoint.value)}
+									value={codepoint.value}
+								/>
+							))}
+						</ol>
+					</li>
+				))}
+			</ol>
+		</section>
+	);
+}
+
+function CodepointCard({
+	glyph,
+	info,
+	value,
+}: {
+	glyph: string;
+	info: CodepointInfo | undefined;
+	value: number;
+}) {
+	const hex = formatCodepoint(value);
+
+	return (
+		<li className="demo-card w-44 min-w-44 text-center">
+			<h3 className="m-0 font-mono text-sm font-semibold">
+				<a
+					href={`https://util.unicode.org/UnicodeJsps/character.jsp?a=${hex}`}
+					target="_blank"
+					rel="noreferrer"
+				>
+					U+{hex}
+				</a>
+			</h3>
+			<p className="my-3 text-4xl">{glyph}</p>
+			{info?.pending ? (
+				<p className="demo-muted m-0 text-sm">Loading</p>
+			) : (
+				<p className="m-0 text-sm">{info?.name}</p>
+			)}
+			{info?.definition && (
+				<p className="demo-muted mt-2 text-xs italic">{info.definition}</p>
+			)}
+		</li>
+	);
+}
+
+function Examples({ onPick }: { onPick: (text: string) => void }) {
+	// The first render is deterministic, so the prerendered HTML matches.
+	const [shown, setShown] = useState<readonly Example[]>(() =>
+		examples.slice(0, 3),
+	);
+
+	return (
+		<section className="demo-panel mt-8 max-w-xl">
+			<div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+				<h2 className="demo-section-title">Try an example</h2>
+				<button
+					type="button"
+					className="demo-button demo-button-secondary"
+					onClick={() => setShown(pickExamples(3))}
+				>
+					Show others
+				</button>
+			</div>
+			<ul className="m-0 list-none space-y-3 p-0">
+				{shown.map(([text, description]) => (
+					<li key={text}>
+						<button
+							type="button"
+							className="demo-list-item w-full text-left"
+							onClick={() => onPick(text)}
+						>
+							<span className="text-lg">{text}</span>
+							<span className="demo-muted ml-3 text-sm">{description}</span>
+						</button>
+					</li>
+				))}
+			</ul>
+		</section>
 	);
 }

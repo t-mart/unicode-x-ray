@@ -36,6 +36,15 @@ describe("segment", () => {
 		expect(codepointValues(segment("\u{1F389}"))).toEqual([0x1f389]);
 	});
 
+	it("offsets every grapheme and code point in the input string", () => {
+		const graphemes = segment(`a${astronaut}b`);
+
+		expect(graphemes.map((grapheme) => grapheme.offset)).toEqual([0, 1, 8]);
+		expect(
+			graphemes[1]?.codepoints.map((codepoint) => codepoint.offset),
+		).toEqual([1, 3, 5, 6]);
+	});
+
 	/** Evidence for D15: a cluster is not what a reader of Devanagari perceives. */
 	it("splits Devanagari where the eye does not", () => {
 		expect(shape(hindi)).toEqual(["हि", "न्दी"]);

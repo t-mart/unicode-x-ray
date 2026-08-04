@@ -1,5 +1,5 @@
-import blocksJson from "../../public/data/blocks.json";
-import manifestJson from "../../public/data/manifest.json";
+import blocksJson from "../data/blocks.json";
+import manifestJson from "../data/manifest.json";
 import { lookupName, type NameNode } from "./names.ts";
 
 export type Block = [start: number, end: number, name: string];

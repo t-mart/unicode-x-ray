@@ -15,6 +15,7 @@ export type Manifest = {
 
 export type WriteOptions = {
 	outputDir: string;
+	inlineDir: string;
 	version: string;
 	names: readonly NameRange[];
 	definitions: ReadonlyMap<number, string>;
@@ -76,13 +77,21 @@ export function groupDefinitions(
 	return chunks;
 }
 
-/** The manifest lands last, so a failed run never advertises missing chunks. */
+/**
+ * Chunks go to the public directory, because the browser fetches them by URL.
+ * The manifest and the blocks go to the source directory, because the bundle
+ * inlines them and Vite refuses to import anything under public.
+ *
+ * The manifest lands last, so a failed run never advertises missing chunks.
+ */
 export async function writeData(options: WriteOptions): Promise<Manifest> {
-	const { outputDir } = options;
+	const { outputDir, inlineDir } = options;
 
 	await rm(outputDir, { recursive: true, force: true });
+	await rm(inlineDir, { recursive: true, force: true });
 	await mkdir(path.join(outputDir, "names"), { recursive: true });
 	await mkdir(path.join(outputDir, "defs"), { recursive: true });
+	await mkdir(inlineDir, { recursive: true });
 
 	const write = (file: string, value: unknown) =>
 		writeJson(path.join(outputDir, file), value, options.compress);
@@ -97,9 +106,10 @@ export async function writeData(options: WriteOptions): Promise<Manifest> {
 		...[...defChunks].map(([chunk, entries]) =>
 			write(`defs/${chunk}.json`, entries),
 		),
-		write(
-			"blocks.json",
+		writeJson(
+			path.join(inlineDir, "blocks.json"),
 			options.blocks.map((block) => [block.start, block.end, block.name]),
+			false,
 		),
 	]);
 
@@ -111,7 +121,7 @@ export async function writeData(options: WriteOptions): Promise<Manifest> {
 		defChunks: [...defChunks.keys()].sort((a, b) => a - b),
 	};
 
-	await write("manifest.json", manifest);
+	await writeJson(path.join(inlineDir, "manifest.json"), manifest, false);
 
 	return manifest;
 }

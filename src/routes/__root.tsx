@@ -29,7 +29,7 @@ export const Route = createRootRouteWithContext<{
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: "Unicode X-Ray",
 			},
 		],
 		links: [
