@@ -30,10 +30,15 @@ function nodeLength(value: NameNode[1]): number {
 }
 
 /**
- * The C1 controls that UnicodeData.txt assigns without a name. They resolve to
- * the block fallback, which is the best any name table can do.
+ * The C1 controls that UnicodeData.txt assigns without a name. Their names come
+ * from NameAliases.txt, where all four are labelled figment or control.
  */
-const unnamed = [0x80, 0x81, 0x84, 0x99];
+const aliasedControls = [
+	[0x80, "PADDING CHARACTER"],
+	[0x81, "HIGH OCTET PRESET"],
+	[0x84, "INDEX"],
+	[0x99, "SINGLE GRAPHIC CHARACTER INTRODUCER"],
+] as const;
 
 describe("generated data", () => {
 	it("lists chunks that exist and are not empty", () => {
@@ -72,11 +77,31 @@ describe("generated data", () => {
 		}
 	});
 
-	it("gives the four unnamed controls no name", () => {
-		for (const codepoint of unnamed) {
+	it("names the controls that UnicodeData.txt leaves blank", () => {
+		for (const [codepoint, name] of aliasedControls) {
 			const nodes = names.get(chunkOf(codepoint)) ?? [];
-			expect(lookupName(codepoint, nodes)).toBeNull();
+			expect(lookupName(codepoint, nodes)).toBe(name);
 		}
+	});
+
+	it("applies a name correction over the formal name", () => {
+		const corrections = [
+			[0x01a2, "LATIN CAPITAL LETTER GHA"],
+			[0x2118, "WEIERSTRASS ELLIPTIC FUNCTION"],
+			[0xfe18, "PRESENTATION FORM FOR VERTICAL RIGHT WHITE LENTICULAR BRACKET"],
+		] as const;
+
+		for (const [codepoint, name] of corrections) {
+			const nodes = names.get(chunkOf(codepoint)) ?? [];
+			expect(lookupName(codepoint, nodes)).toBe(name);
+		}
+	});
+
+	it("describes an Egyptian hieroglyph", () => {
+		const entries = definitions.get(chunkOf(0x13000)) ?? [];
+		const entry = entries.find(([codepoint]) => codepoint === 0x13000);
+
+		expect(entry?.[1]).toMatch(/^Man, seated/);
 	});
 });
 
@@ -110,7 +135,7 @@ describe.skipIf(!sameVersion)(
 				}
 			}
 
-			expect(missing).toEqual(unnamed);
+			expect(missing).toEqual([]);
 			expect(extra).toEqual([]);
 		});
 	},

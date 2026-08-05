@@ -167,15 +167,20 @@ The predictions in §2.5 held. Actual output at Unicode 17.0.0:
 
 | Layer  |     Raw |   brotli | Chunks |
 | ------ | ------: | -------: | -----: |
-| names  | 1.58 MB | 177.8 KB |     83 |
-| defs   | 1.03 MB | 308.2 KB |     26 |
+| names  | 1.55 MB | 177.7 KB |     83 |
+| defs   | 1.59 MB | 376.3 KB |     28 |
 | blocks |   11 KB |   3.6 KB |      1 |
 
-Largest name chunk: 22.2 KB brotli. 45,851 ranges, 346 blocks.
+Largest name chunk: 22.2 KB brotli. 45,855 ranges, 105 aliases, 27,665
+definitions, 346 blocks.
 
 Two corrections to §2.5. The name layer needs 83 chunks, not 82, because
-Unicode 17 crosses one more boundary. Chunked definitions cost 308 KB against
-the 262 KB single-blob estimate, but they load on demand.
+Unicode 17 crosses one more boundary. Chunked definitions cost more than the
+262 KB single-blob estimate, but they load on demand.
+
+The definition layer grew when Unikemet arrived (§3.4). Chunk `0x13` is 52.4 KB
+brotli and chunk `0x14` is 15.7 KB. Only a reader of Egyptian hieroglyphs pays
+for either. This is what the chunking was for.
 
 ---
 
@@ -304,6 +309,44 @@ run-length encoding gives nothing:
 [[cp, "one; a, an; alone"], ...]
 ```
 
+### 3.4 Name layers, revised
+
+The original three layers left two gaps. Both are closed. Order runs from
+lowest precedence to highest:
+
+1. `UnicodeData.txt`, for the surrogate and private use ranges.
+2. `extracted/DerivedName.txt`, which names everything else that has a name.
+3. The Unicode 1.0 name field, the only name a control has in `UnicodeData.txt`.
+4. `NameAliases.txt`, taking `correction`, `alternate`, `control`, then
+   `figment`. `abbreviation` is skipped: LF and BOM are short forms, not names.
+
+A Unicode name is immutable, so a wrong name is never fixed in place. The
+correction goes in `NameAliases.txt`. Measured effects at 17.0.0:
+
+| Code point | Formal name                  | Applied name                 |
+| ---------- | ---------------------------- | ---------------------------- |
+| U+2118     | SCRIPT CAPITAL P             | WEIERSTRASS ELLIPTIC FUNCTION|
+| U+FE18     | ...LENTICULAR BRAKCET        | ...LENTICULAR BRACKET        |
+| U+0CDE     | KANNADA LETTER FA            | KANNADA LETTER LLLA          |
+| U+01A2     | LATIN CAPITAL LETTER OI      | LATIN CAPITAL LETTER GHA     |
+| U+FEFF     | ZERO WIDTH NO-BREAK SPACE    | BYTE ORDER MARK              |
+| U+0007     | BELL (collides with U+1F514) | ALERT                        |
+| U+000A     | LINE FEED (LF)               | LINE FEED                    |
+
+D3 is closed. U+0084 takes the `control` alias INDEX. U+0080, U+0081, and
+U+0099 take `figment` aliases, which Unicode defines as labels that no standard
+ever approved. A figment beats no name. Every assigned code point now resolves,
+with no exceptions.
+
+Definitions come from two files, merged: `kDefinition` in `Unihan_Readings.txt`
+and `kEH_Desc` in `Unikemet.txt`, which is new in 17.0. `kEH_Desc` covers 4,380
+Egyptian hieroglyphs, 932 of 1,072 in the main block and 3,448 of 3,995 in
+Extended-A. `kEH_Func` exists too and is skipped: one field per meaning.
+
+Rejected: `NamesList.txt`. It carries 2,525 informative aliases, but its own
+header says it "should not be parsed for machine-readable information", and its
+best content is already in `NameAliases.txt`.
+
 ---
 ## 4. Commit plan
 
@@ -409,12 +452,24 @@ application to keep working.
   Also replaced the scaffold branding in `Header`, `Footer`, and the document
   title. The footer carries the data version.
 
-- [ ] **S7. `app: write the about page`**
+- [x] **S7. `app: write the about page`**
 
-  The correction half of C16. Extended grapheme clusters are not the units a
-  reader of Devanagari perceives (D15). The examples contradict the old claim.
-  Explain the difference, and document the version skew: the browser supplies
-  segmentation, the data file supplies names, and the two versions can differ.
+  The correction half of C16. The prose is the original text, ported as written.
+  Three changes only:
+
+  1. D15 is deleted. The claim that graphemes are "the visual units that make
+     sense to our eyes" is gone. A new paragraph follows the pedagogy of UAX #29
+     instead: a grapheme is a good guess, the rules are the same for all
+     languages, and a Slovak reader calls `ch` one letter while the tool shows
+     two. The measured Indic and Southeast Asian splits stay in §2.4 item 3,
+     where they belong. They mean nothing to an English reader.
+  2. A new "Versions" section states that the browser supplies the segmentation
+     and the data file supplies the names. It reads the version from the
+     manifest and explains what `<unknown, Block Name>` means.
+  3. The Unihan step no longer says the definition is appended to the name. The
+     definition is a separate element now.
+
+  A note about the four unnamed controls (D3) is added to the Naming section.
 
 - [ ] **S8. `ci: refresh the Unicode data monthly`**
 
@@ -436,9 +491,9 @@ application to keep working.
 3. **Should a lone surrogate get a name?** One can arrive from a damaged
    `?text=` parameter. Today it resolves to `High Surrogates` or
    `Low Surrogates` from the block table. That is defensible.
-4. **`/about` is not in the HTML source.** SPA mode renders route components on
-   the client. Set `ssr: true` on that route alone if the prose must be
-   crawlable.
+4. ~~`/about` is not in the HTML source.~~ Closed. Measured after S7: the
+   prerender writes the full prose into `about/index.html`. Only `/` is a shell,
+   because the SPA shell writes to `index.html`.
 
 ## 6. Verification commands
 

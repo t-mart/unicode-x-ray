@@ -9,8 +9,10 @@ const versionPattern = /Version (\d+\.\d+\.\d+) of the Unicode Standard/;
 export type UcdFiles = {
 	unicodeData: string;
 	derivedName: string;
+	nameAliases: string;
 	blocks: string;
 	unihanReadings: string;
+	unikemet: string;
 };
 
 /** Reads the version from the live UCD directory. A run must pin one version. */
@@ -33,14 +35,30 @@ export async function fetchUcdFiles(
 	const dir = path.join(cacheDir, version);
 	await mkdir(dir, { recursive: true });
 
-	const [unicodeData, derivedName, blocks, unihanReadings] = await Promise.all([
+	const [
+		unicodeData,
+		derivedName,
+		nameAliases,
+		blocks,
+		unihanReadings,
+		unikemet,
+	] = await Promise.all([
 		cachedText(dir, "UnicodeData.txt", `${root}UnicodeData.txt`),
 		cachedText(dir, "DerivedName.txt", `${root}extracted/DerivedName.txt`),
+		cachedText(dir, "NameAliases.txt", `${root}NameAliases.txt`),
 		cachedText(dir, "Blocks.txt", `${root}Blocks.txt`),
 		cachedUnihanReadings(dir, `${root}Unihan.zip`),
+		cachedText(dir, "Unikemet.txt", `${root}Unikemet.txt`),
 	]);
 
-	return { unicodeData, derivedName, blocks, unihanReadings };
+	return {
+		unicodeData,
+		derivedName,
+		nameAliases,
+		blocks,
+		unihanReadings,
+		unikemet,
+	};
 }
 
 async function fetchText(url: string): Promise<string> {
@@ -111,8 +129,8 @@ export type UnicodeData = {
 	readonly reserved: readonly NameRange[];
 	/** How many code points are assigned, used to check the name table for gaps. */
 	readonly assignedCount: number;
-	/** Assigned code points with no usable name. */
-	readonly unnamed: readonly number[];
+	/** Controls with an empty Unicode 1.0 name field. NameAliases.txt covers them. */
+	readonly unnamedControls: readonly number[];
 };
 
 /**
@@ -122,7 +140,7 @@ export type UnicodeData = {
 export function parseUnicodeData(text: string, blocks: readonly NameRange[]) {
 	const controls = new Map<number, string>();
 	const reserved: NameRange[] = [];
-	const unnamed: number[] = [];
+	const unnamedControls: number[] = [];
 	let assignedCount = 0;
 
 	let rangeStart: number | null = null;
@@ -177,7 +195,7 @@ export function parseUnicodeData(text: string, blocks: readonly NameRange[]) {
 			if (unicode1Name) {
 				controls.set(code, unicode1Name);
 			} else {
-				unnamed.push(code);
+				unnamedControls.push(code);
 			}
 		}
 	}
@@ -186,7 +204,12 @@ export function parseUnicodeData(text: string, blocks: readonly NameRange[]) {
 		throw new Error("UnicodeData.txt ended with an unclosed range");
 	}
 
-	return { controls, reserved, assignedCount, unnamed } satisfies UnicodeData;
+	return {
+		controls,
+		reserved,
+		assignedCount,
+		unnamedControls,
+	} satisfies UnicodeData;
 }
 
 function blockName(blocks: readonly NameRange[], codepoint: number): string {
@@ -260,24 +283,68 @@ export function parseBlocks(text: string): NameRange[] {
 	return blocks;
 }
 
-/** Unihan kDefinition gives a short gloss for CJK ideographs. */
-export function parseUnihanDefinitions(text: string): Map<number, string> {
-	const definitions = new Map<number, string>();
+/**
+ * A character name never changes, even when it is wrong. NameAliases.txt is
+ * where Unicode publishes the fix. Types in falling order of authority:
+ *
+ * - `correction` repairs a name that is misleading or misspelled.
+ * - `alternate` is the name people actually use. One entry: U+FEFF.
+ * - `control` is the ISO 6429 name for a C0 or C1 control.
+ * - `figment` is a label that no standard ever approved. Three C1 controls
+ *   have nothing else, so it beats no name at all.
+ *
+ * `abbreviation` is skipped. LF and BOM are short forms, not names.
+ */
+const aliasRanking = ["correction", "alternate", "control", "figment"];
+
+export function parseNameAliases(text: string): Map<number, string> {
+	const best = new Map<number, { name: string; rank: number }>();
+
+	for (const line of dataLines(text)) {
+		const [codeHex, name, type] = line.split(";");
+
+		if (!codeHex || !name || !type) {
+			throw new Error(`Malformed NameAliases.txt row: ${line}`);
+		}
+
+		const rank = aliasRanking.indexOf(type);
+		if (rank < 0) {
+			continue;
+		}
+
+		const code = Number.parseInt(codeHex, 16);
+		const current = best.get(code);
+
+		if (!current || rank < current.rank) {
+			best.set(code, { name, rank });
+		}
+	}
+
+	return new Map([...best].map(([code, { name }]) => [code, name]));
+}
+
+/**
+ * Unihan and Unikemet share one format: a code point, a tag, and a value,
+ * separated by tabs. `kDefinition` glosses a CJK ideograph. `kEH_Desc`
+ * describes what an Egyptian hieroglyph depicts.
+ */
+export function parseTaggedValues(
+	text: string,
+	tag: string,
+): Map<number, string> {
+	const values = new Map<number, string>();
 
 	for (const line of text.split("\n")) {
 		if (!line || line.startsWith("#")) {
 			continue;
 		}
 
-		const [codeField, field, definition] = line.split("\t");
+		const [codeField, field, value] = line.split("\t");
 
-		if (field === "kDefinition" && codeField && definition) {
-			definitions.set(
-				Number.parseInt(codeField.slice(2), 16),
-				definition.trim(),
-			);
+		if (field === tag && codeField && value) {
+			values.set(Number.parseInt(codeField.slice(2), 16), value.trim());
 		}
 	}
 
-	return definitions;
+	return values;
 }

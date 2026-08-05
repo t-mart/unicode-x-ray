@@ -1,13 +1,15 @@
 import path from "node:path";
 import { parseArgs } from "node:util";
 import type { NameRange } from "#/lib/names.ts";
+import { assertNoOverlap, countCovered, mergeNames } from "./layers.ts";
 import {
 	fetchLatestVersion,
 	fetchUcdFiles,
 	parseBlocks,
 	parseDerivedName,
+	parseNameAliases,
+	parseTaggedValues,
 	parseUnicodeData,
-	parseUnihanDefinitions,
 	type UnicodeData,
 } from "./ucd.ts";
 import { writeData } from "./write.ts";
@@ -15,39 +17,28 @@ import { writeData } from "./write.ts";
 const defaultCacheDir = "node_modules/.cache/ucd";
 
 /**
- * DerivedName.txt wins wherever it has a name. UnicodeData.txt supplies the
- * rest: the control characters, the surrogates, and the private use areas.
+ * Four layers, from lowest precedence to highest:
+ *
+ * 1. UnicodeData.txt, for the surrogate and private use ranges.
+ * 2. DerivedName.txt, which names everything else that has a name.
+ * 3. The Unicode 1.0 name field, which is the only name a control has there.
+ * 4. NameAliases.txt, which corrects a wrong name and names the rest of the
+ *    controls.
+ *
+ * Layers 3 and 4 name one code point at a time, so they split any range they
+ * land inside.
  */
 function buildNameRanges(
 	derived: readonly NameRange[],
+	aliases: ReadonlyMap<number, string>,
 	unicodeData: UnicodeData,
 ): NameRange[] {
-	const ranges: NameRange[] = [...derived, ...unicodeData.reserved];
+	const overrides = new Map([...unicodeData.controls, ...aliases]);
+	const ranges = mergeNames([...derived, ...unicodeData.reserved], overrides);
 
-	for (const [codepoint, name] of unicodeData.controls) {
-		ranges.push({ start: codepoint, end: codepoint, name });
-	}
-
-	ranges.sort((a, b) => a.start - b.start);
-
-	for (let i = 1; i < ranges.length; i++) {
-		const previous = ranges[i - 1];
-		const current = ranges[i];
-		if (previous && current && current.start <= previous.end) {
-			throw new Error(
-				`Overlapping names at U+${current.start.toString(16).toUpperCase()}`,
-			);
-		}
-	}
+	assertNoOverlap(ranges);
 
 	return ranges;
-}
-
-function countCovered(ranges: readonly NameRange[]): number {
-	return ranges.reduce(
-		(total, range) => total + range.end - range.start + 1,
-		0,
-	);
 }
 
 async function main() {
@@ -69,20 +60,28 @@ async function main() {
 	const blocks = parseBlocks(files.blocks);
 	const unicodeData = parseUnicodeData(files.unicodeData, blocks);
 	const derived = parseDerivedName(files.derivedName);
-	const definitions = parseUnihanDefinitions(files.unihanReadings);
+	const aliases = parseNameAliases(files.nameAliases);
 
-	const names = buildNameRanges(derived, unicodeData);
+	const definitions = new Map([
+		...parseTaggedValues(files.unihanReadings, "kDefinition"),
+		...parseTaggedValues(files.unikemet, "kEH_Desc"),
+	]);
 
-	if (unicodeData.unnamed.length > 0) {
-		const list = unicodeData.unnamed
+	const names = buildNameRanges(derived, aliases, unicodeData);
+
+	const unnamed = unicodeData.unnamedControls.filter(
+		(code) => !aliases.has(code),
+	);
+
+	if (unnamed.length > 0) {
+		const list = unnamed
 			.map((code) => `U+${code.toString(16).toUpperCase().padStart(4, "0")}`)
 			.join(", ");
-		console.warn(`${unicodeData.unnamed.length} assigned but unnamed: ${list}`);
+		console.warn(`${unnamed.length} assigned but unnamed: ${list}`);
 	}
 
 	const covered = countCovered(names);
-	const difference =
-		unicodeData.assignedCount - unicodeData.unnamed.length - covered;
+	const difference = unicodeData.assignedCount - unnamed.length - covered;
 
 	if (difference !== 0) {
 		throw new Error(
@@ -101,7 +100,10 @@ async function main() {
 	});
 
 	console.log(
-		`${names.length} ranges, ${manifest.nameChunks.length} name chunks, ` +
+		`${names.length} ranges, ${aliases.size} aliases, ${definitions.size} definitions`,
+	);
+	console.log(
+		`${manifest.nameChunks.length} name chunks, ` +
 			`${manifest.defChunks.length} definition chunks, ${blocks.length} blocks`,
 	);
 	console.log(`wrote ${values.output} and ${values["inline-output"]}`);
