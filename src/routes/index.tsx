@@ -92,6 +92,9 @@ function Form({
 	update: (text: string, norm: Normalization | undefined) => void;
 }) {
 	const [copied, setCopied] = useState(false);
+	const [input, setInput] = useState(text);
+
+	useEffect(() => setInput(text), [text]);
 
 	async function copyLink() {
 		await navigator.clipboard.writeText(window.location.href);
@@ -107,11 +110,14 @@ function Form({
 				<input
 					type="text"
 					id="text"
-					value={text}
+					value={input}
 					placeholder="Put your text here"
 					// biome-ignore lint/a11y/noAutofocus: the input is the whole point of the page
 					autoFocus
-					onChange={(event) => update(event.target.value, norm)}
+					onChange={(event) => {
+						setInput(event.target.value);
+						update(event.target.value, norm);
+					}}
 				/>
 			</div>
 
@@ -122,7 +128,7 @@ function Form({
 					value={norm ?? ""}
 					onChange={(event) =>
 						update(
-							text,
+							input,
 							normalizations.find((value) => value === event.target.value),
 						)
 					}
@@ -136,9 +142,15 @@ function Form({
 				</select>
 			</div>
 
-			{text.length > 0 && (
+			{input.length > 0 && (
 				<div>
-					<button type="button" onClick={() => update("", norm)}>
+					<button
+						type="button"
+						onClick={() => {
+							setInput("");
+							update("", norm);
+						}}
+					>
 						Clear
 					</button>{" "}
 					<button type="button" onClick={copyLink}>

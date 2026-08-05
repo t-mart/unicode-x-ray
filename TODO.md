@@ -1,0 +1,3 @@
+- bring over favicon (or redesign?)
+- style everything
+- add social previews: og, twitter, etc
