@@ -4,6 +4,9 @@ import { type Example, examples, pickExamples } from "../lib/examples.ts";
 import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
 import { type Character, useCodepointInfo } from "../lib/unicode-query.ts";
 
+const DESCRIPTION =
+  "See a text's Unicode graphemes and code points.";
+
 const normalizations = ["NFC", "NFD", "NFKC", "NFKD"] as const;
 type Normalization = (typeof normalizations)[number];
 
@@ -33,8 +36,7 @@ export const Route = createFileRoute("/")({
       { title: "Unicode X-Ray" },
       {
         name: "description",
-        content:
-          "Split text into graphemes and code points, and name every one.",
+        content: DESCRIPTION,
       },
     ],
   }),
@@ -66,10 +68,7 @@ function XRay() {
   return (
     <main>
       <h1>Unicode X-Ray</h1>
-      <p>
-        Paste text. See the graphemes your reader sees, the code points behind
-        them, and the name of every one.
-      </p>
+      <p>{DESCRIPTION}</p>
 
       <Form text={text} norm={norm} update={update} />
 
