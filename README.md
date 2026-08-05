@@ -1,212 +1,83 @@
-Welcome to your new TanStack Start app!
+# Unicode X-Ray
 
-# Getting Started
+Unicode X-Ray shows what text is made of.
 
-To run this application:
+Paste text into the box. The tool breaks the text into grapheme clusters, then
+breaks each cluster into code points. Each code point shows its number, its
+character, and its name. Some characters also show a definition.
 
-```bash
+Use it to find a hidden character, to see how an emoji is built, or to read the
+name of a character you do not recognize.
+
+The `/about` page explains grapheme clusters, code points, normalization, and
+where the names come from.
+
+## Requirements
+
+- Node 26 or later
+- pnpm
+
+## Develop
+
+```sh
 pnpm install
 pnpm dev
 ```
 
-# Building For Production
+The dev server listens on port 3000.
 
-To build this application for production:
+## Build
 
-```bash
+```sh
 pnpm build
 ```
 
-## Styling
+The build writes static files to `.output/public`. Serve that directory with any
+file server. The application runs in the browser and fetches its data over HTTP.
+No server code is necessary.
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+## Check the work
 
-### Removing Tailwind CSS
+| Command          | Effect                                     |
+| ---------------- | ------------------------------------------ |
+| `pnpm typecheck` | Type check the project                     |
+| `pnpm check`     | Report lint and format problems with Biome |
+| `pnpm test`      | Run the tests once                         |
 
-If you prefer not to use Tailwind CSS:
+## The data
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Remove `@tailwindcss/vite` and `tailwindcss` from `package.json`
+Names come from the Unicode Character Database (UCD). `pnpm gen-data` downloads
+the UCD, builds a name for every code point, and writes JSON files. Downloads
+are cached in `node_modules/.cache/ucd`.
 
-## Linting & Formatting
+The generator reads six files. `UnicodeData.txt` and `DerivedName.txt` supply
+the names. `NameAliases.txt` corrects a wrong name and names the C1 controls.
+`Blocks.txt` supplies the block names. `Unihan.zip` supplies a definition for
+each CJK ideograph, and `Unikemet.txt` supplies a description for each Egyptian
+hieroglyph. The `/about` page gives the order of precedence.
 
-This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
+The output is in two places:
 
+- `src/data` holds `manifest.json` and `blocks.json`. The build bundles both
+  into the application, because every page needs them.
+- `public/data` holds the names and the definitions, cut into chunks of 4096
+  code points. The browser fetches only the chunks that the text on screen
+  needs. The whole table is 3.5 MB. Latin text needs one chunk of 126 KB, or
+  18 KB after compression.
 
-```bash
-pnpm lint
-pnpm format
-pnpm check
-```
+Both directories are committed, so a build needs no network access.
 
+## Monthly refresh
 
-## Deploy with Nitro
+The `Refresh Unicode data` workflow runs on the first day of each month. It
+compares the version in `src/data/manifest.json` against the version that the
+UCD publishes. The two versions usually agree, and the workflow stops.
 
-This project uses Nitro as a generic server adapter, so it can run on any Node-compatible host.
+When the versions differ, the workflow runs `pnpm gen-data`, runs the tests, and
+commits the result as `data: update to Unicode <version>`. A failed test stops
+the commit.
 
-```bash
-npm run build
-node dist/server/index.mjs
-```
+To force a refresh, start the workflow by hand from the Actions tab.
 
-The build output is a self-contained Node server. To deploy, push the `dist/` directory to your host (Render, Fly.io, your own VPS, etc.) and run the server command above.
-
-For host-specific presets (Vercel, Netlify, Cloudflare, AWS Lambda, etc.) and tuning, see https://v3.nitro.build/deploy.
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+To do the same work locally, run `pnpm gen-data`, then commit `src/data` and
+`public/data`.

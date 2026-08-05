@@ -490,10 +490,17 @@ application to keep working.
   `public/data` and `src/data` records the chunk files that a new version
   deletes.
 
-- [ ] **S9. `docs: write the README`**
+- [x] **S9. `docs: write the README`**
 
-  The rest of C16. Describe the tool, the build, the data generation, and the
-  refresh workflow. Delete the scaffold README text.
+  The rest of C16. The scaffold text is gone. The README describes the tool, the
+  commands, the data, and the refresh workflow.
+
+  It does not repeat the about page. The about page explains Unicode to a user.
+  The README explains the repository to a maintainer, and points at the about
+  page for the naming order.
+
+  Two numbers are measured, not estimated: `public/data` is 3.5 MB, and the
+  Latin name chunk is 126 KB raw and 18 KB brotli.
 
 ## 5. Open items
 
