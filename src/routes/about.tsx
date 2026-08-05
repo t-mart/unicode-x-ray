@@ -285,6 +285,17 @@ function About() {
 								applications such as search engines, where decorative text may
 								be compared against <q>normal</q> text.
 							</p>
+							<p>
+								For example, see the codepoints of{" "}
+								<Link to="/" search={{ text: "ℝ", norm: "NFD" }}>
+									<em>ℝ</em> under NFD
+								</Link>{" "}
+								and{" "}
+								<Link to="/" search={{ text: "ℝ", norm: "NFKD" }}>
+									<em>ℝ</em> under NFKD
+								</Link>
+								.
+							</p>
 						</dd>
 					</dl>
 

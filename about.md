@@ -129,6 +129,9 @@ There are two axes of normalization, both of which are applied simultaneously:
   applications such as search engines, where decorative text may be compared
   against "normal" text.
 
+  For example, see the codepoints of [_ℝ_ under NFD](/?text=ℝ&norm=NFD) and
+  [_ℝ_ under NFKD](/?text=ℝ&norm=NFKD).
+
 Control for normalization is offered on Unicode X-Ray because users may be
 interested in the different forms that text can take.
 

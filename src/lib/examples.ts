@@ -9,7 +9,7 @@ export type Example = readonly [text: string, description: string];
  * says what it means.
  */
 export const examples: readonly Example[] = [
-	// The first three are the opening view, so keep them varied
+	// The first three are the opening view because pre-rendering, so keep them varied
 	["👩🏽‍🚀", "One emoji, four code points"],
 	["Z̷̲̫̼͓̑͂͆ã̴͚̆l̴̛͍͓̙̫̔g̵̛̦̰̉͐ó̶̫̓̚", "Combining marks, piled on"],
 	["𓁹𓂀𓃒", "Egyptian hieroglyphs, described in full"], // an eye, the eye of Horus, a bull
