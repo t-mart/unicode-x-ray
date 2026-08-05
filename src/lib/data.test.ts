@@ -84,6 +84,25 @@ describe("generated data", () => {
 		}
 	});
 
+	/**
+	 * A surrogate is not a character and has no Unicode name. The block name is
+	 * the only answer available, and the runtime oracle below cannot check it.
+	 */
+	it("names each surrogate range after its block", () => {
+		const surrogates = [
+			[0xd800, "High Surrogates"],
+			[0xdb7f, "High Surrogates"],
+			[0xdb80, "High Private Use Surrogates"],
+			[0xdc00, "Low Surrogates"],
+			[0xdfff, "Low Surrogates"],
+		] as const;
+
+		for (const [codepoint, name] of surrogates) {
+			const nodes = names.get(chunkOf(codepoint)) ?? [];
+			expect(lookupName(codepoint, nodes)).toBe(name);
+		}
+	});
+
 	it("applies a name correction over the formal name", () => {
 		const corrections = [
 			[0x01a2, "LATIN CAPITAL LETTER GHA"],

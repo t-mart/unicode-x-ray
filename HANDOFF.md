@@ -545,9 +545,20 @@ application to keep working.
 1. ~~TypeScript 7 upgrade.~~ Closed by decision 10.
 2. ~~Definition chunk granularity.~~ Closed. Both layers use 4096. Revisit only
    with a measurement that shows a real cost.
-3. **Should a lone surrogate get a name?** One can arrive from a damaged
-   `?text=` parameter. Today it resolves to `High Surrogates` or
-   `Low Surrogates` from the block table. That is defensible.
+3. ~~Should a lone surrogate get a name?~~ Closed. No change.
+
+   The premise was wrong. A lone surrogate cannot arrive through `?text=`. The
+   router serializes search with `URLSearchParams`, which replaces an unpaired
+   surrogate with U+FFFD. Measured: `{ text: "\uD800" }` serializes to
+   `?text=%EF%BF%BD`, and a hand written `?text=%ED%A0%80` parses to three
+   U+FFFD. The router also parses the location back out of the href it builds,
+   so the component never reads the raw value.
+
+   The answer is right anyway if one ever arrives. U+D800 resolves to
+   `High Surrogates`, U+DB80 to `High Private Use Surrogates`, and U+DC00 to
+   `Low Surrogates`. That follows decision 4 and beats `<unknown>`. A test in
+   `data.test.ts` pins all three, because the runtime oracle skips D800..DFFF
+   and cannot.
 4. ~~`/about` is not in the HTML source.~~ Closed. Measured after S7: the
    prerender writes the full prose into `about/index.html`. Only `/` is a shell,
    because the SPA shell writes to `index.html`.
