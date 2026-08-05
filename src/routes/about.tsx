@@ -311,7 +311,7 @@ function About() {
           </p>
 
           <p>
-            You can read more about this in{" "}
+            Read more about normalization in{" "}
             <a href="https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49537">
               Section 3.11 Normalization Forms
             </a>
