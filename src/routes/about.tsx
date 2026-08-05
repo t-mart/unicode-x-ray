@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { manifest } from "../lib/unicode.ts";
 
 export const Route = createFileRoute("/about")({
 	component: About,
@@ -193,8 +192,8 @@ function About() {
 								code points
 							</a>
 						</dfn>
-						, numbers in the range 0 to 10FFFF<sub>16</sub>. Code points are written in hexadecimal notation, prefixed with{" "}
-						<q>U+</q>.
+						, numbers in the range 0 to 10FFFF<sub>16</sub>. Code points are
+						written in hexadecimal notation, prefixed with <q>U+</q>.
 					</p>
 
 					<p>
@@ -225,8 +224,10 @@ function About() {
 					<h2 id="normalization">Normalization</h2>
 
 					<p>
-						Above, it was noted that the <em>é</em> grapheme could be equivalently represented
-						as either a single character or as two separate ones. But, with two encodings, processors would be unable to tell they are the same. This creates the need for normalization:
+						Above, it was noted that the <em>é</em> grapheme could be
+						equivalently represented as either a single character or as two
+						separate ones. But, with two encodings, processors would be unable
+						to tell they are the same. This creates the need for normalization:
 						a regular way of picking the encoding.
 					</p>
 
@@ -287,9 +288,9 @@ function About() {
 						<dd>
 							<p>
 								In general, canonical normalization seeks to preserve the
-								meaning of the characters, while compatibility normalization reduces
-								the characters to a more basic form, which may lose some of the
-								original meaning.
+								meaning of the characters, while compatibility normalization
+								reduces the characters to a more basic form, which may lose some
+								of the original meaning.
 							</p>
 							<p>
 								For example, see the codepoints of{" "}
@@ -315,7 +316,8 @@ function About() {
 
 					<p>
 						Control for normalization is offered on Unicode X-Ray because users
-						may be interested in the different representations that text can take.
+						may be interested in the different representations that text can
+						take.
 					</p>
 				</section>
 
@@ -323,98 +325,95 @@ function About() {
 					<h2 id="naming">Naming</h2>
 
 					<p>
-						Unicode X-Ray provides a bespoke naming scheme. For each code point,
-						the following data (produced by the Unicode Consortium) are applied,
-						from lowest precedence to highest:
+						Unicode X-Ray gives each assigned code point a useful name when the
+						Unicode Character Database provides enough information. It combines
+						several official files and gives some sources priority over others.
 					</p>
 
 					<ol>
 						<li>
 							<p>
-								The name field from{" "}
-								<a href="https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt">
-									<code>UnicodeData.txt</code>
-								</a>
-								. If the code point category is <code>Cc</code> (indicating a
-								control character), then the Unicode 1.0 name field is used
-								instead.
-							</p>
-							<p>
-								This file is, by far, the largest source for code point names in
-								this process.
-							</p>
-						</li>
-
-						<li>
-							<p>
-								The name field from{" "}
+								<strong>Start with the published name.</strong>{" "}
 								<a href="https://www.unicode.org/Public/UCD/latest/ucd/extracted/DerivedName.txt">
 									<code>DerivedName.txt</code>
-								</a>
-								.
-							</p>
-							<p>
-								The names from this file provide more human names to some CJK
-								ideographs and also append Jamo (the alphabetic components of
-								Korean Hangul) to their respective Hangul characters.
+								</a>{" "}
+								supplies the name for almost every assigned code point. For most
+								code points, this name is the final result.
 							</p>
 						</li>
 
 						<li>
 							<p>
-								Names from{" "}
+								<strong>Label code points without individual names.</strong>{" "}
+								Surrogates and private-use code points do not have individual
+								Unicode names.{" "}
+								<a href="https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt">
+									<code>UnicodeData.txt</code>
+								</a>{" "}
+								identifies these ranges, and{" "}
+								<a href="https://www.unicode.org/Public/UCD/latest/ucd/Blocks.txt">
+									<code>Blocks.txt</code>
+								</a>{" "}
+								supplies each block name.
+							</p>
+							<p>Unicode X-Ray uses the block name as a useful label.</p>
+						</li>
+
+						<li>
+							<p>
+								<strong>Add control names.</strong>{" "}
+								<a href="https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt">
+									<code>UnicodeData.txt</code>
+								</a>{" "}
+								records the Unicode 1.0 name for many control code points. The
+								generator uses this name when no selected alias exists.
+							</p>
+						</li>
+
+						<li>
+							<p>
+								<strong>Apply selected aliases.</strong> Unicode keeps each
+								published character name stable, even if the name contains an
+								error.{" "}
 								<a href="https://www.unicode.org/Public/UCD/latest/ucd/NameAliases.txt">
 									<code>NameAliases.txt</code>
-								</a>
-								, in this order of preference: <code>correction</code>,{" "}
-								<code>alternate</code>, <code>control</code>, then{" "}
-								<code>figment</code>.
+								</a>{" "}
+								publishes corrections and other aliases separately.
 							</p>
 							<p>
-								A Unicode name never changes, even when it is wrong, so
-								corrections are published here instead. U+2118 is named SCRIPT
-								CAPITAL P, but it is neither a P nor a capital: the correction
-								is WEIERSTRASS ELLIPTIC FUNCTION. U+FE18 has a typo in its name,
-								BRAKCET. This file also names the C1 control characters,
-								including the four that nothing else names: U+0080, U+0081,
-								U+0084, and U+0099. Unicode calls three of those names{" "}
-								<code>figment</code>, meaning labels that were never approved in
-								any standard, but a figment beats no name at all.
+								Unicode X-Ray prefers corrections, then alternate names, control
+								names, and finally figments. It does not use abbreviations as
+								character names.
 							</p>
 							<p>
-								Abbreviations such as LF and BOM are also in this file. They are
-								skipped, because they are short forms rather than names.
+								The selected alias replaces the published name or the Unicode
+								1.0 control name.
 							</p>
 						</li>
 
 						<li>
 							<p>
-								<code>kDefinition</code> entries from{" "}
-								<code>Unihan_Readings.txt</code> in{" "}
+								<strong>Add a definition when one exists.</strong> Some names
+								identify an ideograph by code point or a hieroglyph by catalog
+								number. These names identify the character, but they do not
+								explain it.
+							</p>
+							<p>
+								<code>kDefinition</code> in <code>Unihan_Readings.txt</code>{" "}
+								from{" "}
 								<a href="https://www.unicode.org/Public/UCD/latest/ucd/Unihan.zip">
 									<code>Unihan.zip</code>
-								</a>
-								, and <code>kEH_Desc</code> entries from{" "}
+								</a>{" "}
+								supplies glosses for Chinese, Japanese, and Korean ideographs.{" "}
+								<code>kEH_Desc</code> in{" "}
 								<a href="https://www.unicode.org/Public/UCD/latest/ucd/Unikemet.txt">
 									<code>Unikemet.txt</code>
-								</a>
-								. A definition does not replace the name. It shows below the
-								name, on its own line.
+								</a>{" "}
+								describes Egyptian hieroglyphs.
 							</p>
 							<p>
-								<code>kDefinition</code> entries are provided for many Chinese,
-								Japanese, and Korean ideographic characters. This can help
-								non-speakers access the meaning of these characters.
-							</p>
-							<p>
-								<code>kEH_Desc</code> entries describe what an Egyptian
-								hieroglyph depicts. U+13000, for example, is named EGYPTIAN
-								HIEROGLYPH A001, which tells you nothing on its own. Its
-								description is{" "}
-								<q>
-									Man, seated, right knee raised, right arm raised, left arm in
-									front of body.
-								</q>
+								Unicode X-Ray shows a definition below the name. The definition
+								never replaces the name.
 							</p>
 						</li>
 					</ol>
@@ -424,16 +423,15 @@ function About() {
 					<h2 id="versions">Versions</h2>
 
 					<p>
-						Unicode X-Ray gets its grapheme clusters from your browser, and its
-						names from a data file. That file is built from Unicode{" "}
-						{manifest.unicodeVersion}, generated on{" "}
-						<time dateTime={manifest.generated}>{manifest.generated}</time>.
+						Your browser may use a different version of Unicode than Unicode
+						X-Ray, and therefore, Unicode X-Ray may not be able to provide a
+						name for every character you provide.
 					</p>
 
 					<p>
-						Your browser may support a newer version of Unicode than the data
-						file. When it does, a new code point has no name here, and is shown
-						as <code>{"<unknown, Block Name>"}</code> instead.
+						In the case that you have entered a code point not yet in the
+						Unicode version used by Unicode X-Ray, its name will be{" "}
+						<code>{"<unknown, Block Name>"}</code>.
 					</p>
 				</section>
 			</article>

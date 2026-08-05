@@ -9,7 +9,7 @@ import {
 	nameIn,
 } from "./unicode.ts";
 
-export type CodepointInfo = {
+export type Character = {
 	codepoint: number;
 	name: string;
 	definition: string | null;
@@ -60,9 +60,7 @@ export const commonNameChunk = 0;
  * that has not arrived yet resolves to the unknown fallback rather than to
  * nothing, so one slow request never blanks the rest of the input.
  */
-export function useCodepointInfo(
-	codepoints: readonly number[],
-): CodepointInfo[] {
+export function useCodepointInfo(codepoints: readonly number[]): Character[] {
 	const chunks = [...new Set(codepoints.map(chunkOf))].sort((a, b) => a - b);
 	const nameChunks = chunks.filter(hasNameChunk);
 	const defChunks = chunks.filter(hasDefChunk);

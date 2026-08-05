@@ -3,7 +3,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { type Example, examples, pickExamples } from "../lib/examples.ts";
 import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
 import { manifest } from "../lib/unicode.ts";
-import { type CodepointInfo, useCodepointInfo } from "../lib/unicode-query.ts";
+import { type Character, useCodepointInfo } from "../lib/unicode-query.ts";
 
 const normalizations = ["NFC", "NFD", "NFKC", "NFKD"] as const;
 type Normalization = (typeof normalizations)[number];
@@ -163,7 +163,7 @@ function Graphemes({
 	byCodepoint,
 }: {
 	graphemes: readonly Grapheme[];
-	byCodepoint: ReadonlyMap<number, CodepointInfo>;
+	byCodepoint: ReadonlyMap<number, Character>;
 }) {
 	return (
 		<section aria-labelledby="graphemes">
@@ -176,7 +176,7 @@ function Graphemes({
 						<p>{grapheme.string}</p>
 						<ol>
 							{grapheme.codepoints.map((codepoint) => (
-								<CodepointCard
+								<CharacterCard
 									key={codepoint.offset}
 									glyph={codepoint.string}
 									info={byCodepoint.get(codepoint.value)}
@@ -191,13 +191,13 @@ function Graphemes({
 	);
 }
 
-function CodepointCard({
+function CharacterCard({
 	glyph,
 	info,
 	value,
 }: {
 	glyph: string;
-	info: CodepointInfo | undefined;
+	info: Character | undefined;
 	value: number;
 }) {
 	const hex = formatCodepoint(value);
