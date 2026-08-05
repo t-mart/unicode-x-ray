@@ -225,25 +225,38 @@ function About() {
 					<h2 id="normalization">Normalization</h2>
 
 					<p>
-						Above, I mentioned that the <em>é</em> grapheme could be expressed
-						as either a single code point or as two separate ones, even though
-						they are rendered identically. These are examples of normalizations:
-						processes to compose or decompose text into code points in a regular
-						way. This is useful when comparing 2 texts for identity.
-					</p>
-
-					<p>
-						You can read more about this in{" "}
-						<a href="https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49537">
-							Section 3.11 Normalization Forms
-						</a>
-						.
+						Above, it was noted that the <em>é</em> grapheme could be equivalently represented
+						as either a single character or as two separate ones. But, with two encodings, processors would be unable to tell they are the same. This creates the need for normalization:
+						a regular way of picking the encoding.
 					</p>
 
 					<p>
 						There are two axes of normalization, both of which are applied
 						simultaneously:
 					</p>
+
+					<table>
+						<caption>The four normalization forms</caption>
+						<thead>
+							<tr>
+								<th scope="col">Form</th>
+								<th scope="col">Composition</th>
+								<th scope="col">Decomposition</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<th scope="row">Canonical</th>
+								<td>NFC</td>
+								<td>NFD</td>
+							</tr>
+							<tr>
+								<th scope="row">Compatibility</th>
+								<td>NFKC</td>
+								<td>NFKD</td>
+							</tr>
+						</tbody>
+					</table>
 
 					<dl>
 						<dt>
@@ -274,11 +287,9 @@ function About() {
 						<dd>
 							<p>
 								In general, canonical normalization seeks to preserve the
-								meaning of the characters. Compatibility normalization reduces
+								meaning of the characters, while compatibility normalization reduces
 								the characters to a more basic form, which may lose some of the
-								original meaning. Compatibility normalization may be useful in
-								applications such as search engines, where decorative text may
-								be compared against <q>normal</q> text.
+								original meaning.
 							</p>
 							<p>
 								For example, see the codepoints of{" "}
@@ -295,8 +306,16 @@ function About() {
 					</dl>
 
 					<p>
+						You can read more about this in{" "}
+						<a href="https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49537">
+							Section 3.11 Normalization Forms
+						</a>
+						.
+					</p>
+
+					<p>
 						Control for normalization is offered on Unicode X-Ray because users
-						may be interested in the different forms that text can take.
+						may be interested in the different representations that text can take.
 					</p>
 				</section>
 
