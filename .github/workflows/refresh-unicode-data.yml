@@ -1,0 +1,46 @@
+name: Refresh Unicode data
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    # A fork has no reason to commit data to itself.
+    if: github.repository_owner == 't-mart'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - id: version
+        run: node scripts/check-version.ts >> "$GITHUB_OUTPUT"
+
+      - if: steps.version.outputs.stale == 'true'
+        run: pnpm gen-data
+
+      - if: steps.version.outputs.stale == 'true'
+        run: pnpm test
+
+      - if: steps.version.outputs.stale == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all public/data src/data
+          git commit --message 'data: update to Unicode ${{ steps.version.outputs.latest }}'
+          git push

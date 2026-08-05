@@ -471,12 +471,24 @@ application to keep working.
 
   A note about the four unnamed controls (D3) is added to the Naming section.
 
-- [ ] **S8. `ci: refresh the Unicode data monthly`**
+- [x] **S8. `ci: refresh the Unicode data monthly`**
 
-  C9 unchanged. `workflow_dispatch` plus a monthly cron,
-  `permissions: contents: write`, compare the manifest version against §3.2,
-  exit clean when they match, commit `data: update to Unicode <version>` when
-  they differ. Guard against forks.
+  C9 unchanged. `.github/workflows/refresh-unicode-data.yml` runs on the first
+  of the month and on `workflow_dispatch`. The job is skipped unless the owner
+  is `t-mart`, so a fork never commits to itself.
+
+  `scripts/check-version.ts` reads `unicodeVersion` from the manifest, calls
+  `fetchLatestVersion` from the generator, and writes `latest` and `stale` to
+  `$GITHUB_OUTPUT`. The §3.2 regex stays in one place. Every later step is
+  guarded by `stale == 'true'`, so a run on a current version does nothing.
+
+  The comparison cannot be replaced by "generate, then look for a diff". The
+  manifest carries a `generated` date, so every run would report a change.
+
+  A refresh runs `pnpm gen-data`, then `pnpm test`, and only then commits. A
+  broken generator fails the run and commits nothing. `git add --all` on
+  `public/data` and `src/data` records the chunk files that a new version
+  deletes.
 
 - [ ] **S9. `docs: write the README`**
 
@@ -503,4 +515,5 @@ pnpm check
 pnpm test
 pnpm gen-data
 pnpm build
+node scripts/check-version.ts
 ```

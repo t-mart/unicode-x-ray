@@ -66,7 +66,7 @@ export const examples: readonly Example[] = [
 	["𠮷野家", "A name that lives outside the first plane"], // Yoshinoya, with the rare tsuchiyoshi form
 	["⿰木木", "A way to describe a character by its parts"], // left to right, tree and tree: the character for grove
 	["안녕하세요", "Korean hangul syllables"], // annyeonghaseyo, hello
-	["\u1112\u1161\u11AB", "The same syllable, assembled by hand"], // hieuh, a, nieun: the jamo inside han
+	["\u1112\u1161\u11AB", "A Korean syllable, spelled out in letters"], // hieuh, a, nieun: the jamo that make han
 	["㍻㍿", "Whole words squeezed into one square"], // the Heisei era, and kabushiki gaisha, meaning corporation
 
 	// Symbols
