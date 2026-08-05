@@ -1,8 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { type Example, examples, pickExamples } from "../lib/examples.ts";
 import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
-import { manifest } from "../lib/unicode.ts";
 import { type Character, useCodepointInfo } from "../lib/unicode-query.ts";
 
 const normalizations = ["NFC", "NFD", "NFKC", "NFKD"] as const;
@@ -79,13 +78,6 @@ function XRay() {
 			) : (
 				<Examples onPick={(picked) => update(picked, norm)} />
 			)}
-
-			<p>
-				Names come from Unicode {manifest.unicodeVersion}, generated{" "}
-				<time dateTime={manifest.generated}>{manifest.generated}</time>.
-				Segmentation comes from your browser, which may know a different
-				version. <Link to="/about">More about that.</Link>
-			</p>
 		</main>
 	);
 }

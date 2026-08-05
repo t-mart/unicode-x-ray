@@ -307,6 +307,14 @@ function About() {
 					</dl>
 
 					<p>
+						A few characters change under every form. For one example, open{" "}
+						<Link to="/" search={{ text: "ẛ" }}>
+							<em>ẛ</em>
+						</Link>{" "}
+						and step through the normalization menu.
+					</p>
+
+					<p>
 						You can read more about this in{" "}
 						<a href="https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49537">
 							Section 3.11 Normalization Forms
@@ -411,10 +419,7 @@ function About() {
 								</a>{" "}
 								describes Egyptian hieroglyphs.
 							</p>
-							<p>
-								Unicode X-Ray shows a definition below the name. The definition
-								never replaces the name.
-							</p>
+							<p>Unicode X-Ray shows a definition below the name.</p>
 						</li>
 					</ol>
 				</section>
