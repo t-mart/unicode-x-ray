@@ -516,6 +516,30 @@ application to keep working.
   remain in the HTML, `active` and `$tsr`. TanStack Router writes both. No
   stylesheet reads them.
 
+- [x] **S11. `app: port the about page and use semantic HTML`**
+
+  `about.md` is now the about page, word for word. The two files agree again.
+
+  With no styles, the element is the only structure left, so each one carries
+  its meaning:
+
+  | Element                  | Where                                        |
+  | ------------------------ | -------------------------------------------- |
+  | `section`, `h2`, `id`    | One per about heading, with `aria-labelledby` |
+  | `nav`                    | The header links, and the about contents      |
+  | `figure`, `figcaption`   | The three café figures                        |
+  | `dfn`, `q`, `em`, `code` | Terms, quoted words, emphasis, file names     |
+  | `kbd`                    | The right arrow and backspace keys            |
+  | `sub`                    | The 16 in 10FFFF                              |
+  | `dl`, `dt`, `dd`         | The two axes of normalization, and the        |
+  |                          | examples list on the home page                |
+  | `form`                   | The text field, the select, and the buttons   |
+  | `time`                   | The generated date, in three places           |
+
+  Measured on the built HTML of `/about`: 36 `p`, 27 `a`, 27 `em`, 20 `li`,
+  17 `code`, 6 `section`, 6 `h2`, 5 `q`, 3 `figure`, 2 `nav`, 2 `kbd`, 1 `h1`,
+  1 `sub`, 1 `dl`, 1 `time`, 0 style attributes.
+
 ## 5. Open items
 
 1. ~~TypeScript 7 upgrade.~~ Closed by decision 10.

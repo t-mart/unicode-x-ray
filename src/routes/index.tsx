@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { type Example, examples, pickExamples } from "../lib/examples.ts";
 import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
 import { manifest } from "../lib/unicode.ts";
@@ -82,8 +82,9 @@ function XRay() {
 
 			<p>
 				Names come from Unicode {manifest.unicodeVersion}, generated{" "}
-				{manifest.generated}. Segmentation comes from your browser, which may
-				know a different version. <Link to="/about">More about that.</Link>
+				<time dateTime={manifest.generated}>{manifest.generated}</time>.
+				Segmentation comes from your browser, which may know a different
+				version. <Link to="/about">More about that.</Link>
 			</p>
 		</main>
 	);
@@ -107,10 +108,12 @@ function Form({
 	}
 
 	return (
-		<div>
+		// Nothing to submit: every control writes to the URL as it changes.
+		<form onSubmit={(event) => event.preventDefault()}>
 			<div>
 				<label htmlFor="text">Text</label>{" "}
 				<input
+					type="text"
 					id="text"
 					value={text}
 					placeholder="Put your text here"
@@ -151,7 +154,7 @@ function Form({
 					</button>
 				</div>
 			)}
-		</div>
+		</form>
 	);
 }
 
@@ -163,8 +166,8 @@ function Graphemes({
 	byCodepoint: ReadonlyMap<number, CodepointInfo>;
 }) {
 	return (
-		<section>
-			<h2>
+		<section aria-labelledby="graphemes">
+			<h2 id="graphemes">
 				{graphemes.length} grapheme{graphemes.length === 1 ? "" : "s"}
 			</h2>
 			<ol>
@@ -207,7 +210,7 @@ function CodepointCard({
 					target="_blank"
 					rel="noreferrer"
 				>
-					U+{hex}
+					<code>U+{hex}</code>
 				</a>
 			</h3>
 			<p>{glyph}</p>
@@ -224,21 +227,23 @@ function Examples({ onPick }: { onPick: (text: string) => void }) {
 	);
 
 	return (
-		<section>
-			<h2>Try an example</h2>
+		<section aria-labelledby="examples">
+			<h2 id="examples">Try an example</h2>
 			<button type="button" onClick={() => setShown(pickExamples(3))}>
 				Show others
 			</button>
-			<ul>
+			<dl>
 				{shown.map(([text, description]) => (
-					<li key={text}>
-						<button type="button" onClick={() => onPick(text)}>
-							{text}
-						</button>{" "}
-						{description}
-					</li>
+					<Fragment key={text}>
+						<dt>
+							<button type="button" onClick={() => onPick(text)}>
+								{text}
+							</button>
+						</dt>
+						<dd>{description}</dd>
+					</Fragment>
 				))}
-			</ul>
+			</dl>
 		</section>
 	);
 }

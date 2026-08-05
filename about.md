@@ -24,7 +24,7 @@ Not in this file: a "Return to home" link sits above the title.
 1. [Naming](#naming)
 1. [Versions](#versions)
 
-## Overview
+## Overview {#overview}
 
 - Unicode X-Ray is a tool for exploring Unicode text.
 - Each [grapheme cluster](#grapheme-clusters) is displayed in a row.

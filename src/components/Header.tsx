@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 export default function Header() {
 	return (
 		<header>
-			<nav>
+			<nav aria-label="Main">
 				<ul>
 					<li>
 						<Link to="/">Home</Link>
