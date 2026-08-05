@@ -7,16 +7,16 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 const config = defineConfig({
-	resolve: { tsconfigPaths: true },
-	plugins: [
-		devtools(),
-		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
-		tanstackStart({
-			spa: { enabled: true, prerender: { outputPath: "/index.html" } },
-			prerender: { enabled: true, crawlLinks: true },
-		}),
-		viteReact(),
-	],
+  resolve: { tsconfigPaths: true },
+  plugins: [
+    devtools(),
+    nitro({ rollupConfig: { external: [/^@sentry\//] } }),
+    tanstackStart({
+      spa: { enabled: true, prerender: { outputPath: "/index.html" } },
+      prerender: { enabled: true, crawlLinks: true },
+    }),
+    viteReact(),
+  ],
 });
 
 export default config;

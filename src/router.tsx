@@ -4,27 +4,27 @@ import { commonNameChunk, nameChunkQuery } from "./lib/unicode-query.ts";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
-	const queryClient = new QueryClient({
-		defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
-	});
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+  });
 
-	if (!import.meta.env.SSR) {
-		void queryClient.prefetchQuery(nameChunkQuery(commonNameChunk));
-	}
+  if (!import.meta.env.SSR) {
+    void queryClient.prefetchQuery(nameChunkQuery(commonNameChunk));
+  }
 
-	const router = createTanStackRouter({
-		routeTree,
-		context: { queryClient },
-		scrollRestoration: true,
-		defaultPreload: "intent",
-		defaultPreloadStaleTime: 0,
-	});
+  const router = createTanStackRouter({
+    routeTree,
+    context: { queryClient },
+    scrollRestoration: true,
+    defaultPreload: "intent",
+    defaultPreloadStaleTime: 0,
+  });
 
-	return router;
+  return router;
 }
 
 declare module "@tanstack/react-router" {
-	interface Register {
-		router: ReturnType<typeof getRouter>;
-	}
+  interface Register {
+    router: ReturnType<typeof getRouter>;
+  }
 }

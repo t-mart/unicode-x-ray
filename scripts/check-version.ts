@@ -8,17 +8,17 @@ import { fetchLatestVersion } from "./gen-data/ucd.ts";
  * line goes to stderr, where the workflow log keeps it.
  */
 const manifestPath = path.join(
-	import.meta.dirname,
-	"../src/data/manifest.json",
+  import.meta.dirname,
+  "../src/data/manifest.json",
 );
 const { unicodeVersion } = JSON.parse(readFileSync(manifestPath, "utf8")) as {
-	unicodeVersion: string;
+  unicodeVersion: string;
 };
 
 const latest = await fetchLatestVersion();
 
 console.error(
-	`data holds Unicode ${unicodeVersion}, the UCD publishes ${latest}`,
+  `data holds Unicode ${unicodeVersion}, the UCD publishes ${latest}`,
 );
 console.log(`latest=${latest}`);
 console.log(`stale=${String(unicodeVersion !== latest)}`);
