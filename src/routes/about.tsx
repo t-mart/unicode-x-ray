@@ -26,10 +26,6 @@ function Figure({
 function About() {
 	return (
 		<main>
-			<p>
-				<Link to="/">Return to home</Link>
-			</p>
-
 			<article>
 				<h1>About</h1>
 
