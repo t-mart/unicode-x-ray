@@ -1,2 +1,2 @@
 - style everything
-- add social previews: og, twitter, etc
+- redo public/og.png after styling (source: scripts/og.svg, `pnpm gen-og`)

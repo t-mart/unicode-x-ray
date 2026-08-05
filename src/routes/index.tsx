@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { type Example, examples, pickExamples } from "../lib/examples.ts";
+import { pageMeta } from "../lib/meta.ts";
 import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
 import { type Character, useCodepointInfo } from "../lib/unicode-query.ts";
 
-const DESCRIPTION =
-  "See a text's Unicode graphemes and code points.";
+const DESCRIPTION = "See a text's Unicode graphemes and code points.";
 
 const normalizations = ["NFC", "NFD", "NFKC", "NFKD"] as const;
 type Normalization = (typeof normalizations)[number];
@@ -32,13 +32,11 @@ export const Route = createFileRoute("/")({
     return buildSearch(text, norm);
   },
   head: () => ({
-    meta: [
-      { title: "Unicode X-Ray" },
-      {
-        name: "description",
-        content: DESCRIPTION,
-      },
-    ],
+    meta: pageMeta({
+      title: "Unicode X-Ray",
+      description: DESCRIPTION,
+      path: "/",
+    }),
   }),
 });
 

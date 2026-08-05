@@ -9,6 +9,7 @@
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
     "gen-data": "node scripts/gen-data/main.ts",
+    "gen-og": "resvg scripts/og.svg public/og.png",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

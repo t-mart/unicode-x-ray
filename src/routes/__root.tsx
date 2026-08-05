@@ -11,6 +11,7 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import { siteMeta } from "../lib/meta.ts";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -27,6 +28,7 @@ export const Route = createRootRouteWithContext<{
       {
         title: "Unicode X-Ray",
       },
+      ...siteMeta,
     ],
     links: [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }],
   }),

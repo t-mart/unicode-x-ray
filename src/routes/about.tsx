@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { pageMeta } from "../lib/meta.ts";
 
 export const Route = createFileRoute("/about")({
   component: About,
   head: () => ({
-    meta: [{ title: "Unicode X-Ray: About" }],
+    meta: pageMeta({
+      title: "Unicode X-Ray: About",
+      description:
+        "How grapheme clusters, code points, normalization, and character names work.",
+      path: "/about",
+    }),
   }),
 });
 
