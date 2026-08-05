@@ -65,9 +65,9 @@ function XRay() {
 	const byCodepoint = new Map(info.map((entry) => [entry.codepoint, entry]));
 
 	return (
-		<main className="demo-page demo-page-wide">
-			<h1 className="demo-title display-title mb-2">Unicode X-Ray</h1>
-			<p className="demo-muted mb-8 max-w-2xl">
+		<main>
+			<h1>Unicode X-Ray</h1>
+			<p>
 				Paste text. See the graphemes your reader sees, the code points behind
 				them, and the name of every one.
 			</p>
@@ -80,7 +80,7 @@ function XRay() {
 				<Examples onPick={(picked) => update(picked, norm)} />
 			)}
 
-			<p className="demo-muted mt-10 text-sm">
+			<p>
 				Names come from Unicode {manifest.unicodeVersion}, generated{" "}
 				{manifest.generated}. Segmentation comes from your browser, which may
 				know a different version. <Link to="/about">More about that.</Link>
@@ -107,13 +107,10 @@ function Form({
 	}
 
 	return (
-		<div className="demo-panel grid gap-4 sm:grid-cols-[3fr_1fr]">
+		<div>
 			<div>
-				<label className="demo-section-title mb-2 block" htmlFor="text">
-					Text
-				</label>
+				<label htmlFor="text">Text</label>{" "}
 				<input
-					className="demo-input"
 					id="text"
 					value={text}
 					placeholder="Put your text here"
@@ -124,11 +121,8 @@ function Form({
 			</div>
 
 			<div>
-				<label className="demo-section-title mb-2 block" htmlFor="norm">
-					Normalization
-				</label>
+				<label htmlFor="norm">Normalization</label>{" "}
 				<select
-					className="demo-select"
 					id="norm"
 					value={norm ?? ""}
 					onChange={(event) =>
@@ -148,19 +142,11 @@ function Form({
 			</div>
 
 			{text.length > 0 && (
-				<div className="flex flex-wrap gap-3 sm:col-span-2">
-					<button
-						type="button"
-						className="demo-button demo-button-secondary"
-						onClick={() => update("", norm)}
-					>
+				<div>
+					<button type="button" onClick={() => update("", norm)}>
 						Clear
-					</button>
-					<button
-						type="button"
-						className="demo-button demo-button-secondary"
-						onClick={copyLink}
-					>
+					</button>{" "}
+					<button type="button" onClick={copyLink}>
 						{copied ? "Link copied" : "Copy link"}
 					</button>
 				</div>
@@ -177,17 +163,15 @@ function Graphemes({
 	byCodepoint: ReadonlyMap<number, CodepointInfo>;
 }) {
 	return (
-		<section className="mt-8">
-			<h2 className="demo-section-title mb-4 text-xl">
+		<section>
+			<h2>
 				{graphemes.length} grapheme{graphemes.length === 1 ? "" : "s"}
 			</h2>
-			<ol className="flex flex-col gap-4">
+			<ol>
 				{graphemes.map((grapheme) => (
-					<li key={grapheme.offset} className="flex items-center gap-4">
-						<p className="w-24 min-w-24 text-center text-5xl">
-							{grapheme.string}
-						</p>
-						<ol className="flex flex-row gap-3 overflow-x-auto py-2">
+					<li key={grapheme.offset}>
+						<p>{grapheme.string}</p>
+						<ol>
 							{grapheme.codepoints.map((codepoint) => (
 								<CodepointCard
 									key={codepoint.offset}
@@ -216,8 +200,8 @@ function CodepointCard({
 	const hex = formatCodepoint(value);
 
 	return (
-		<li className="demo-card w-44 min-w-44 text-center">
-			<h3 className="m-0 font-mono text-sm font-semibold">
+		<li>
+			<h3>
 				<a
 					href={`https://util.unicode.org/UnicodeJsps/character.jsp?a=${hex}`}
 					target="_blank"
@@ -226,15 +210,9 @@ function CodepointCard({
 					U+{hex}
 				</a>
 			</h3>
-			<p className="my-3 text-4xl">{glyph}</p>
-			{info?.pending ? (
-				<p className="demo-muted m-0 text-sm">Loading</p>
-			) : (
-				<p className="m-0 text-sm">{info?.name}</p>
-			)}
-			{info?.definition && (
-				<p className="demo-muted mt-2 text-xs italic">{info.definition}</p>
-			)}
+			<p>{glyph}</p>
+			{info?.pending ? <p>Loading</p> : <p>{info?.name}</p>}
+			{info?.definition && <p>{info.definition}</p>}
 		</li>
 	);
 }
@@ -246,28 +224,18 @@ function Examples({ onPick }: { onPick: (text: string) => void }) {
 	);
 
 	return (
-		<section className="demo-panel mt-8 max-w-xl">
-			<div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-				<h2 className="demo-section-title">Try an example</h2>
-				<button
-					type="button"
-					className="demo-button demo-button-secondary"
-					onClick={() => setShown(pickExamples(3))}
-				>
-					Show others
-				</button>
-			</div>
-			<ul className="m-0 list-none space-y-3 p-0">
+		<section>
+			<h2>Try an example</h2>
+			<button type="button" onClick={() => setShown(pickExamples(3))}>
+				Show others
+			</button>
+			<ul>
 				{shown.map(([text, description]) => (
 					<li key={text}>
-						<button
-							type="button"
-							className="demo-list-item w-full text-left"
-							onClick={() => onPick(text)}
-						>
-							<span className="text-lg">{text}</span>
-							<span className="demo-muted ml-3 text-sm">{description}</span>
-						</button>
+						<button type="button" onClick={() => onPick(text)}>
+							{text}
+						</button>{" "}
+						{description}
 					</li>
 				))}
 			</ul>

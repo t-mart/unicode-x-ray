@@ -17,11 +17,9 @@ function Figure({
 	caption: ReactNode;
 }) {
 	return (
-		<figure className="my-8">
-			<div className="demo-card mx-auto w-fit select-none">{children}</div>
-			<figcaption className="demo-muted mt-2 text-center text-sm">
-				{caption}
-			</figcaption>
+		<figure>
+			{children}
+			<figcaption>{caption}</figcaption>
 		</figure>
 	);
 }
@@ -36,31 +34,23 @@ function Heading({
 	level?: 2 | 3;
 }) {
 	if (level === 3) {
-		return (
-			<h3 className="demo-section-title mb-2 mt-8 text-lg" id={id}>
-				{children}
-			</h3>
-		);
+		return <h3 id={id}>{children}</h3>;
 	}
 
-	return (
-		<h2 className="demo-section-title mb-3 mt-10 text-2xl" id={id}>
-			{children}
-		</h2>
-	);
+	return <h2 id={id}>{children}</h2>;
 }
 
 function About() {
 	return (
-		<main className="demo-page max-w-prose">
+		<main>
 			<p>
 				<Link to="/">Return to home</Link>
 			</p>
 
-			<article className="leading-7">
-				<h1 className="demo-title display-title mb-6">About</h1>
+			<article>
+				<h1>About</h1>
 
-				<ol className="mb-6 list-decimal space-y-1 pl-5">
+				<ol>
 					<li>
 						<a href="#general">General</a>
 					</li>
@@ -94,19 +84,7 @@ function About() {
 						</>
 					}
 				>
-					<div className="flex items-center justify-center gap-4 text-4xl">
-						<span>café</span>
-						<span>→</span>
-						<div className="flex items-center justify-center gap-2">
-							<span>c</span>
-							<span className="text-2xl">+</span>
-							<span>a</span>
-							<span className="text-2xl">+</span>
-							<span>f</span>
-							<span className="text-2xl">+</span>
-							<span>é</span>
-						</div>
-					</div>
+					<p>café → c + a + f + é</p>
 				</Figure>
 
 				<p>
@@ -116,7 +94,7 @@ function About() {
 					as the <em>é</em> which is actually built from multiple pieces.
 				</p>
 
-				<p className="mt-4">
+				<p>
 					A grapheme is a good guess, not a promise. Your browser finds them
 					with the rules in{" "}
 					<a href="https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries">
@@ -140,23 +118,9 @@ function About() {
 						</>
 					}
 				>
-					<div className="flex flex-col items-center gap-4">
-						<div className="flex items-center justify-center gap-4 text-4xl">
-							<span>é</span>
-							<span>→</span>
-							<div className="flex items-center justify-center gap-2">
-								<span>e</span>
-								<span className="text-2xl">+</span>
-								<span>{"◌́"}</span>
-							</div>
-						</div>
-						<span>or</span>
-						<div className="flex items-center justify-center gap-4 text-4xl">
-							<span>é</span>
-							<span>→</span>
-							<span>{"é"}</span>
-						</div>
-					</div>
+					<p>{"é → e + ◌́"}</p>
+					<p>or</p>
+					<p>{"é → é"}</p>
 				</Figure>
 
 				<p>
@@ -168,7 +132,7 @@ function About() {
 					an accent mark) that combine to create what you see.
 				</p>
 
-				<p className="mt-4">
+				<p>
 					Try typing or pasting some text to see how what appears simple on
 					screen can be more complex under the hood. You might be surprised to
 					find that emojis, accented characters, and text from different writing
@@ -177,7 +141,7 @@ function About() {
 
 				<Heading id="normalization">Normalization</Heading>
 
-				<p className="demo-list-item mb-4">
+				<p>
 					This is an advanced topic that you can safely ignore! Set the dropdown
 					to "None" to apply no normalization.
 				</p>
@@ -191,7 +155,7 @@ function About() {
 					semantic equivalence.
 				</p>
 
-				<p className="mt-4">
+				<p>
 					You can read more about this in{" "}
 					<a href="https://www.unicode.org/versions/latest/core-spec/chapter-3/#G49537">
 						Section 3.11 Normalization Forms of The Unicode Standard
@@ -199,7 +163,7 @@ function About() {
 					.
 				</p>
 
-				<p className="mt-4">
+				<p>
 					I provide control for normalization on this tool because you may be
 					interested in the different forms that text can take. Try looking at
 					the codepoints produced by looking at <em>é</em> under{" "}
@@ -213,7 +177,7 @@ function About() {
 					forms.
 				</p>
 
-				<p className="mt-4">
+				<p>
 					The K forms go one step further. They replace a character with a plain
 					equivalent. Try{" "}
 					<Link to="/" search={{ text: "𝓑𝓮𝓪𝓾𝓽𝓲𝓯𝓾𝓵", norm: "NFKD" }}>
@@ -231,7 +195,7 @@ function About() {
 					Unicode Consortium) are applied, from lowest precedence to highest:
 				</p>
 
-				<ol className="mt-4 list-decimal space-y-4 pl-5">
+				<ol>
 					<li>
 						<p>
 							The name field from{" "}
@@ -242,7 +206,7 @@ function About() {
 							control character), then the Unicode 1.0 name field is used
 							instead.
 						</p>
-						<p className="mt-2">
+						<p>
 							This file is, by far, the largest source for code point names in
 							this process.
 						</p>
@@ -255,7 +219,7 @@ function About() {
 							</a>
 							.
 						</p>
-						<p className="mt-2">
+						<p>
 							The names from this file provide more human names to some CJK
 							ideographs and also append Jamo (the alphabetic components of
 							Korean Hangul) to their respective Hangul characters.
@@ -271,7 +235,7 @@ function About() {
 							. The definition does not replace the name. It shows below the
 							name, on its own line.
 						</p>
-						<p className="mt-2">
+						<p>
 							<code>kDefinition</code> entries are provided for many Chinese,
 							Japanese, and Korean ideographic characters. This can help
 							non-speakers access the meaning of these characters.
@@ -279,7 +243,7 @@ function About() {
 					</li>
 				</ol>
 
-				<p className="mt-4">
+				<p>
 					Four control characters have no name in these files: U+0080, U+0081,
 					U+0084, and U+0099. They show the name of their block instead.
 				</p>
@@ -292,7 +256,7 @@ function About() {
 					{manifest.unicodeVersion}, generated on {manifest.generated}.
 				</p>
 
-				<p className="mt-4">
+				<p>
 					Your browser can support a different version of Unicode. Unicode adds
 					code points in each release. If your browser is newer than the data
 					file, a new code point shows <code>{"<unknown, Block Name>"}</code>.

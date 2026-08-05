@@ -19,7 +19,6 @@
     "check": "biome check"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-router": "latest",
@@ -27,8 +26,7 @@
     "@tanstack/react-start": "latest",
     "nitro": "3.0.260610-beta",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "tailwindcss": "^4.3.3"
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",

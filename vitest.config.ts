@@ -1,8 +1,8 @@
 import { defineConfig } from "vitest/config";
 
 /**
- * Separate from vite.config.ts on purpose. The tests need no router, no Nitro,
- * and no Tailwind, and loading them costs a second per run.
+ * Separate from vite.config.ts on purpose. The tests need no router and no
+ * Nitro, and loading them costs a second per run.
  */
 export default defineConfig({
 	test: {

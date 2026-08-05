@@ -502,6 +502,20 @@ application to keep working.
   Two numbers are measured, not estimated: `public/data` is 3.5 MB, and the
   Latin name chunk is 126 KB raw and 18 KB brotli.
 
+- [x] **S10. `app: remove every style`**
+
+  The scaffold styles were never wanted. The whole layer is gone: `styles.css`,
+  the Tailwind plugin, the `tailwindcss` and `@tailwindcss/vite` dependencies,
+  the theme toggle, the theme script in `__root.tsx`, and every `className`.
+
+  The markup that only existed to carry a class is gone with it. The figures on
+  the about page are now one line of text each, because the arrow rows were
+  flex containers.
+
+  The build emits no CSS file and no `<style>` element. Two `class` attributes
+  remain in the HTML, `active` and `$tsr`. TanStack Router writes both. No
+  stylesheet reads them.
+
 ## 5. Open items
 
 1. ~~TypeScript 7 upgrade.~~ Closed by decision 10.

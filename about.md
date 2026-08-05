@@ -5,12 +5,12 @@ back to TSX.
 Conventions, so nothing is lost in the round trip:
 
 - `## Heading {#id}` gives the heading its anchor.
-- A blockquote that starts with **Figure** is a graphic in the page. The
-  arrow row is drawn with large type. Edit the caption freely. Tell me if the
-  graphic itself must change.
+- A blockquote that starts with **Figure** becomes a `<figure>` with a
+  `<figcaption>`. Edit the caption freely. Tell me if the figure itself must
+  change.
 - `{unicodeVersion}` and `{generated}` come from the data manifest at runtime.
-- A paragraph marked **Callout** has the boxed style.
 - *Term* on first use is a `<dfn>`. "Quoted" text is a `<q>`.
+- The page has no styles. Every element renders as the browser draws it.
 
 Not in this file: a "Return to home" link sits above the title.
 -->
