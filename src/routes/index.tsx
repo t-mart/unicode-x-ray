@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { type Example, examples, pickExamples } from "../lib/examples.ts";
 import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
 import { manifest } from "../lib/unicode.ts";
@@ -221,10 +221,12 @@ function CodepointCard({
 }
 
 function Examples({ onPick }: { onPick: (text: string) => void }) {
-	// The first render is deterministic, so the prerendered HTML matches.
+	// The prerendered HTML holds no random pick, so the first three stand in
+	// until the browser has hydrated and can choose.
 	const [shown, setShown] = useState<readonly Example[]>(() =>
 		examples.slice(0, 3),
 	);
+	useEffect(() => setShown(pickExamples(3)), []);
 
 	return (
 		<section aria-labelledby="examples">

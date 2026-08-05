@@ -193,12 +193,7 @@ function About() {
 								code points
 							</a>
 						</dfn>
-						, numbers in the range 0 to 10FFFF<sub>16</sub>. (Though, the
-						inverse is not true:{" "}
-						<a href="https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-2/#G286941">
-							not all code points refer to characters
-						</a>
-						). Code points are written in hexadecimal notation, prefixed with{" "}
+						, numbers in the range 0 to 10FFFF<sub>16</sub>. Code points are written in hexadecimal notation, prefixed with{" "}
 						<q>U+</q>.
 					</p>
 
