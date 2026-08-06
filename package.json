@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",
+    "@tailwindcss/vite": "^4.3.3",
     "@tanstack/devtools-vite": "latest",
     "@tanstack/react-query-devtools": "^5.101.4",
     "@tanstack/router-cli": "^1.167.22",
@@ -42,6 +43,7 @@
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.0.5",
     "node-stream-zip": "^1.16.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.2.0",
     "vitest": "^4.1.10"
