@@ -13,8 +13,8 @@ export type Grapheme = {
 
 /**
  * CLDR has no grapheme tailorings outside root, so every locale segments the
- * same way today. The locale is explicit anyway, because a shared link must
- * show the same result to everyone.
+ * same way today. Just in case though, we use "en" explicitly, so that a shared link
+ * shows the same result to everyone.
  */
 const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
 
@@ -71,7 +71,8 @@ export function renderCodepoint(codepoint: number): string {
 // https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-24/#G8188
 // https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-24/#G8239
 // https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-24/#G8246
-// The last resort font may work well here? or, find a font that does.
+// 1. is there a way to reliably identify and test for such values?
+// 2. how should we render them? The last resort font may work well here? or, find a font that does.
 // in general, maybe we should provide fonts for character rendering because users are unlikely
 // to be able to render them all. how should we do this efficiently? font at-rules can help with
 // character selection. maybe unicode publishes fonts in general for this? all the official charts
