@@ -2,6 +2,7 @@
   "name": "unicode-x-ray-2",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.3.0",
   "imports": {
     "#/*": "./src/*"
   },
@@ -35,7 +36,7 @@
     "@biomejs/biome": "2.4.5",
     "@tanstack/devtools-vite": "latest",
     "@tanstack/react-query-devtools": "^5.101.4",
-    "@tanstack/router-cli": "^1.167.21",
+    "@tanstack/router-cli": "^1.167.22",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
