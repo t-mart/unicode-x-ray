@@ -11,6 +11,7 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import Insights from "../components/Insights";
 import { siteMeta } from "../lib/meta.ts";
 
 export const Route = createRootRouteWithContext<{
@@ -64,6 +65,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             ]}
           />
         </QueryClientProvider>
+        <Insights />
         <Scripts />
       </body>
     </html>
