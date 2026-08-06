@@ -11,7 +11,8 @@ import {
 import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
 import { type Character, useCodepointInfo } from "../lib/unicode-query.ts";
 
-const DESCRIPTION = "See a text's Unicode graphemes and code points.";
+const DESCRIPTION =
+  "Explore Unicode. Type text and see its graphemes and code points.";
 
 const BUTTON =
   "rounded-sm border border-line bg-raised px-3 py-1.5 text-ink-dim text-sm hover:border-line-strong hover:text-ink";
