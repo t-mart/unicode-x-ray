@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type Example, examples, pickExamples } from "../lib/examples.ts";
 import { pageMeta } from "../lib/meta.ts";
 import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
@@ -11,6 +11,12 @@ const normalizations = ["NFC", "NFD", "NFKC", "NFKD"] as const;
 type Normalization = (typeof normalizations)[number];
 
 type Search = { text?: string; norm?: Normalization };
+
+const BUTTON =
+  "rounded-sm border border-line bg-raised px-3 py-1.5 text-ink-dim text-sm hover:border-line-strong hover:text-ink";
+
+const SECTION_HEADING =
+  "font-semibold text-ink-dim text-xs uppercase tracking-[0.14em]";
 
 /**
  * The URL is the only state. Nothing copies it into a component, so a shared
@@ -64,9 +70,9 @@ function XRay() {
   const byCodepoint = new Map(info.map((entry) => [entry.codepoint, entry]));
 
   return (
-    <main>
-      <h1>Unicode X-Ray</h1>
-      <p>{DESCRIPTION}</p>
+    <main className="mx-auto max-w-5xl px-4 py-10">
+      <h1 className="font-semibold text-4xl tracking-tight">Unicode X-Ray</h1>
+      <p className="mt-2 text-ink-dim">{DESCRIPTION}</p>
 
       <Form text={text} norm={norm} update={update} />
 
@@ -101,12 +107,18 @@ function Form({
 
   return (
     // Nothing to submit: every control writes to the URL as it changes.
-    <form onSubmit={(event) => event.preventDefault()}>
+    <form
+      onSubmit={(event) => event.preventDefault()}
+      className="mt-8 flex flex-col gap-4 rounded-sm border border-line bg-surface p-4"
+    >
       <div>
-        <label htmlFor="text">Text</label>{" "}
+        <label htmlFor="text" className={`block ${SECTION_HEADING}`}>
+          Text
+        </label>
         <input
           type="text"
           id="text"
+          className="specimen mt-2 w-full rounded-sm border border-line bg-page px-3 py-2.5 text-lg text-ink placeholder:text-ink-faint"
           value={input}
           placeholder="Put your text here"
           // biome-ignore lint/a11y/noAutofocus: the input is the whole point of the page
@@ -118,44 +130,61 @@ function Form({
         />
       </div>
 
-      <div>
-        <label htmlFor="norm">Normalization</label>{" "}
-        <select
-          id="norm"
-          value={norm ?? ""}
-          onChange={(event) =>
-            update(
-              input,
-              normalizations.find((value) => value === event.target.value),
-            )
-          }
-        >
-          <option value="">None</option>
-          {normalizations.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-      </div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <Normalizations norm={norm} onChange={(next) => update(input, next)} />
 
-      {input.length > 0 && (
-        <div>
-          <button
-            type="button"
-            onClick={() => {
-              setInput("");
-              update("", norm);
-            }}
-          >
-            Clear
-          </button>{" "}
-          <button type="button" onClick={copyLink}>
-            {copied ? "Link copied" : "Copy link"}
-          </button>
-        </div>
-      )}
+        {input.length > 0 && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={BUTTON}
+              onClick={() => {
+                setInput("");
+                update("", norm);
+              }}
+            >
+              Clear
+            </button>
+            <button type="button" className={BUTTON} onClick={copyLink}>
+              {copied ? "Link copied" : "Copy link"}
+            </button>
+          </div>
+        )}
+      </div>
     </form>
+  );
+}
+
+function Normalizations({
+  norm,
+  onChange,
+}: {
+  norm: Normalization | undefined;
+  onChange: (norm: Normalization | undefined) => void;
+}) {
+  const options: readonly (Normalization | "")[] = ["", ...normalizations];
+
+  return (
+    <fieldset>
+      <legend className={SECTION_HEADING}>Normalization</legend>
+      <div className="mt-2 flex flex-wrap gap-1 rounded-sm border border-line bg-page p-1">
+        {options.map((value) => (
+          <label key={value || "none"} className="cursor-pointer">
+            <input
+              type="radio"
+              name="norm"
+              value={value}
+              checked={(norm ?? "") === value}
+              onChange={() => onChange(value || undefined)}
+              className="peer sr-only"
+            />
+            <span className="block rounded-xs px-3 py-1.5 font-mono text-ink-dim text-sm hover:text-ink peer-checked:bg-accent peer-checked:font-semibold peer-checked:text-page peer-focus-visible:outline-2 peer-focus-visible:outline-accent peer-focus-visible:outline-offset-2">
+              {value || "None"}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 
@@ -167,15 +196,23 @@ function Graphemes({
   byCodepoint: ReadonlyMap<number, Character>;
 }) {
   return (
-    <section aria-labelledby="graphemes">
-      <h2 id="graphemes">
+    <section aria-labelledby="graphemes" className="mt-10">
+      <h2 id="graphemes" className={SECTION_HEADING}>
         {graphemes.length} grapheme{graphemes.length === 1 ? "" : "s"}
       </h2>
-      <ol>
+      <ol className="mt-4 flex flex-col gap-3">
         {graphemes.map((grapheme) => (
-          <li key={grapheme.offset}>
-            <p>{grapheme.string}</p>
-            <ol>
+          <li
+            key={grapheme.offset}
+            className="flex flex-col overflow-hidden rounded-sm border border-line bg-surface sm:flex-row"
+          >
+            <p
+              dir="ltr"
+              className="specimen tile min-h-28 shrink-0 overflow-hidden border-line border-b px-4 py-2 text-5xl sm:max-w-64 sm:min-w-32 sm:border-r sm:border-b-0"
+            >
+              {grapheme.string}
+            </p>
+            <ol className="flex flex-1 flex-wrap gap-3 p-3">
               {grapheme.codepoints.map((codepoint) => (
                 <CharacterCard
                   key={codepoint.offset}
@@ -204,19 +241,39 @@ function CharacterCard({
   const hex = formatCodepoint(value);
 
   return (
-    <li>
-      <h3>
+    <li className="flex w-full flex-col gap-2.5 rounded-sm border border-line bg-raised p-3 sm:w-56">
+      <h3 className="font-mono text-sm">
         <a
           href={`https://util.unicode.org/UnicodeJsps/character.jsp?a=${hex}`}
           target="_blank"
           rel="noreferrer"
+          className="no-underline hover:underline"
         >
           <code>U+{hex}</code>
         </a>
       </h3>
-      <p>{glyph}</p>
-      {info?.pending ? <p>Loading</p> : <p>{info?.name}</p>}
-      {info?.definition && <p>{info.definition}</p>}
+      <p
+        dir="ltr"
+        className="specimen tile h-20 overflow-hidden rounded-xs border border-line bg-page p-1 text-3xl"
+      >
+        {glyph}
+      </p>
+      {info?.pending ? (
+        <p>
+          <span className="sr-only">Loading</span>
+          <span
+            aria-hidden="true"
+            className="block h-3 w-3/4 animate-pulse rounded-xs bg-line-strong"
+          />
+        </p>
+      ) : (
+        <p className="text-ink-dim text-xs leading-snug tracking-wide">
+          {info?.name}
+        </p>
+      )}
+      {info?.definition && (
+        <p className="text-ink-faint text-xs leading-snug">{info.definition}</p>
+      )}
     </li>
   );
 }
@@ -230,21 +287,39 @@ function Examples({ onPick }: { onPick: (text: string) => void }) {
   useEffect(() => setShown(pickExamples(3)), []);
 
   return (
-    <section aria-labelledby="examples">
-      <h2 id="examples">Try an example</h2>
-      <button type="button" onClick={() => setShown(pickExamples(3))}>
-        Show others
-      </button>
-      <dl>
+    <section aria-labelledby="examples" className="mt-10">
+      <div className="flex items-center justify-between gap-4">
+        <h2 id="examples" className={SECTION_HEADING}>
+          Try an example
+        </h2>
+        <button
+          type="button"
+          className={BUTTON}
+          onClick={() => setShown(pickExamples(3))}
+        >
+          Show others
+        </button>
+      </div>
+      <dl className="mt-4 grid gap-3 sm:grid-cols-3">
         {shown.map(([text, description]) => (
-          <Fragment key={text}>
+          <div
+            key={text}
+            className="flex flex-col overflow-hidden rounded-sm border border-line bg-surface"
+          >
             <dt>
-              <button type="button" onClick={() => onPick(text)}>
+              <button
+                type="button"
+                dir="ltr"
+                onClick={() => onPick(text)}
+                className="specimen tile h-32 w-full overflow-hidden break-all border-line border-b p-3 text-2xl leading-tight hover:bg-raised"
+              >
                 {text}
               </button>
             </dt>
-            <dd>{description}</dd>
-          </Fragment>
+            <dd className="p-3 text-ink-dim text-sm leading-snug">
+              {description}
+            </dd>
+          </div>
         ))}
       </dl>
     </section>

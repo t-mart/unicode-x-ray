@@ -14,6 +14,15 @@ export const Route = createFileRoute("/about")({
   }),
 });
 
+const contents = [
+  ["overview", "Overview"],
+  ["grapheme-clusters", "Grapheme Clusters"],
+  ["characters", "Characters"],
+  ["normalization", "Normalization"],
+  ["naming", "Naming"],
+  ["versions", "Versions"],
+] as const;
+
 function Figure({
   children,
   caption,
@@ -31,30 +40,25 @@ function Figure({
 
 function About() {
   return (
-    <main>
-      <article>
+    <main className="mx-auto max-w-5xl px-4 py-10">
+      <article className="max-w-[68ch]">
         <h1>About</h1>
 
-        <nav aria-label="Contents">
-          <ol>
-            <li>
-              <a href="#overview">Overview</a>
-            </li>
-            <li>
-              <a href="#grapheme-clusters">Grapheme Clusters</a>
-            </li>
-            <li>
-              <a href="#characters">Characters</a>
-            </li>
-            <li>
-              <a href="#normalization">Normalization</a>
-            </li>
-            <li>
-              <a href="#naming">Naming</a>
-            </li>
-            <li>
-              <a href="#versions">Versions</a>
-            </li>
+        <nav
+          aria-label="Contents"
+          className="my-8 rounded-sm border border-line bg-surface p-4"
+        >
+          <ol className="my-0 grid list-none gap-x-8 gap-y-1 p-0 sm:grid-cols-2">
+            {contents.map(([id, label]) => (
+              <li key={id} className="my-0 p-0">
+                <a
+                  href={`#${id}`}
+                  className="text-ink-dim no-underline hover:text-accent"
+                >
+                  {label}
+                </a>
+              </li>
+            ))}
           </ol>
         </nav>
 

@@ -13,6 +13,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import Insights from "../components/Insights";
 import { siteMeta } from "../lib/meta.ts";
+import appCss from "../styles.css?url";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -31,7 +32,10 @@ export const Route = createRootRouteWithContext<{
       },
       ...siteMeta,
     ],
-    links: [{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }],
+    links: [
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "stylesheet", href: appCss },
+    ],
   }),
   shellComponent: RootDocument,
 });
@@ -44,10 +48,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="flex min-h-screen flex-col">
         <QueryClientProvider client={queryClient}>
           <Header />
-          {children}
+          <div className="flex-1">{children}</div>
           <Footer />
           <TanStackDevtools
             config={{
