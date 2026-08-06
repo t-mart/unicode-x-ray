@@ -8,7 +8,12 @@ import {
   normalizations,
   parseSearch,
 } from "../lib/search.ts";
-import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
+import {
+  codepointValues,
+  type Grapheme,
+  segment,
+  withBase,
+} from "../lib/text.ts";
 import { type Character, useCodepointInfo } from "../lib/unicode-query.ts";
 
 const DESCRIPTION =
@@ -196,7 +201,7 @@ function Graphemes({
               dir="ltr"
               className="specimen tile min-h-28 shrink-0 overflow-hidden border-line border-b px-4 py-2 text-5xl sm:max-w-64 sm:min-w-32 sm:border-r sm:border-b-0"
             >
-              {grapheme.string}
+              {withBase(grapheme.string)}
             </p>
             <ol className="flex flex-1 flex-wrap gap-3 p-3">
               {grapheme.codepoints.map((codepoint) => (
@@ -242,7 +247,7 @@ function CharacterCard({
         dir="ltr"
         className="specimen tile h-20 overflow-hidden rounded-xs border border-line bg-page p-1 text-3xl"
       >
-        {glyph}
+        {withBase(glyph)}
       </p>
       {info?.pending ? (
         <p>

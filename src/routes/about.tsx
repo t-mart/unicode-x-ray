@@ -184,6 +184,13 @@ function About() {
           </p>
 
           <p>
+            The circle in <em>{"◌́"}</em> is not part of the text.{" "}
+            <code>U+25CC DOTTED CIRCLE</code> stands in as a base, because a
+            combining character has nothing of its own to attach to. Unicode
+            X-Ray adds this base to every combining character it displays.
+          </p>
+
+          <p>
             (The <em>é</em> is a somewhat poor choice here for illustration
             because it can also be represented as a single character under
             Unicode. However, there are many instances where the only way to

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { codepointValues, segment } from "./text.ts";
+import { codepointValues, segment, withBase } from "./text.ts";
 
 const decomposedE = "e\u0301";
 const astronaut = "\u{1F469}\u{1F3FD}\u200D\u{1F680}";
@@ -56,5 +56,32 @@ describe("codepointValues", () => {
     expect(codepointValues(segment("a\u{1F44D}\u{1F3FB}b"))).toEqual([
       0x61, 0x1f44d, 0x1f3fb, 0x62,
     ]);
+  });
+});
+
+describe("withBase", () => {
+  it("leaves a character that stands on its own", () => {
+    expect(withBase("a")).toBe("a");
+    expect(withBase("\u{1F389}")).toBe("\u{1F389}");
+  });
+
+  it("leaves empty text", () => {
+    expect(withBase("")).toBe("");
+  });
+
+  it("gives a base to a nonspacing mark", () => {
+    expect(withBase("́")).toBe("◌́");
+  });
+
+  it("gives a base to a spacing mark the default shaper ignores", () => {
+    expect(withBase("े")).toBe("◌े");
+  });
+
+  it("gives a base to an enclosing mark", () => {
+    expect(withBase("⃝")).toBe("◌⃝");
+  });
+
+  it("looks only at the first character, so a cluster keeps its own base", () => {
+    expect(withBase(decomposedE)).toBe(decomposedE);
   });
 });

@@ -48,3 +48,20 @@ export function codepointValues(
     grapheme.codepoints.map((codepoint) => codepoint.value),
   );
 }
+
+const DOTTED_CIRCLE = "◌";
+
+/**
+ * A combining mark shown on its own has nothing to attach to, so it lands on
+ * whatever precedes it or floats loose. U+25CC is the base the standard uses to
+ * display a mark in isolation.
+ *
+ * Brahmic shapers already insert one for a cluster with no base, but the
+ * default shaper does not, so a Devanagari vowel sign got a circle and a
+ * combining acute did not. Supplying the base makes every script agree. The
+ * property escape reads the engine's own tables, which are the tables that
+ * decide how the character renders.
+ */
+export function withBase(text: string): string {
+  return /^\p{M}/u.test(text) ? DOTTED_CIRCLE + text : text;
+}
