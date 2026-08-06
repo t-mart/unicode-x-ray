@@ -11,8 +11,8 @@ import {
 import {
   codepointValues,
   type Grapheme,
+  renderCodepoint,
   segment,
-  withBase,
 } from "../lib/text.ts";
 import { type Character, useCodepointInfo } from "../lib/unicode-query.ts";
 
@@ -46,6 +46,8 @@ function XRay() {
   const navigate = Route.useNavigate();
 
   const update = (nextText: string, nextNorm: Normalization | undefined) => {
+    // TODO: calling this function seems to cause a scroll-to-top:
+    // either editing the text or norm. fix this!!
     void navigate({ search: buildSearch(nextText, nextNorm), replace: true });
   };
 
@@ -201,15 +203,13 @@ function Graphemes({
               dir="ltr"
               className="specimen tile min-h-28 shrink-0 overflow-hidden border-line border-b px-4 py-2 text-5xl sm:max-w-64 sm:min-w-32 sm:border-r sm:border-b-0"
             >
-              {withBase(grapheme.string)}
+              {grapheme.string}
             </p>
             <ol className="flex flex-1 flex-wrap gap-3 p-3">
               {grapheme.codepoints.map((codepoint) => (
                 <CharacterCard
                   key={codepoint.offset}
-                  glyph={codepoint.string}
-                  info={byCodepoint.get(codepoint.value)}
-                  value={codepoint.value}
+                  character={byCodepoint.get(codepoint.value)!}
                 />
               ))}
             </ol>
@@ -220,16 +220,8 @@ function Graphemes({
   );
 }
 
-function CharacterCard({
-  glyph,
-  info,
-  value,
-}: {
-  glyph: string;
-  info: Character | undefined;
-  value: number;
-}) {
-  const hex = formatCodepoint(value);
+function CharacterCard({ character }: { character: Character }) {
+  const hex = formatCodepoint(character.codepoint);
 
   return (
     <li className="flex w-full flex-col gap-2.5 rounded-sm border border-line bg-raised p-3 sm:w-56">
@@ -247,9 +239,9 @@ function CharacterCard({
         dir="ltr"
         className="specimen tile h-20 overflow-hidden rounded-xs border border-line bg-page p-1 text-3xl"
       >
-        {withBase(glyph)}
+        {renderCodepoint(character.codepoint)}
       </p>
-      {info?.pending ? (
+      {character?.pending ? (
         <p>
           <span className="sr-only">Loading</span>
           <span
@@ -259,11 +251,13 @@ function CharacterCard({
         </p>
       ) : (
         <p className="text-ink-dim text-xs leading-snug tracking-wide">
-          {info?.name}
+          {character?.name}
         </p>
       )}
-      {info?.definition && (
-        <p className="text-ink-faint text-xs leading-snug">{info.definition}</p>
+      {character?.definition && (
+        <p className="text-ink-faint text-xs leading-snug">
+          {character.definition}
+        </p>
       )}
     </li>
   );

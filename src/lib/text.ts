@@ -49,19 +49,35 @@ export function codepointValues(
   );
 }
 
-const DOTTED_CIRCLE = "◌";
+function isCombiningMark(codepoint: number): boolean {
+  // https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G1632
+  return /^\p{M}/u.test(String.fromCodePoint(codepoint));
+}
+
+const DOTTED_CIRCLE = "\u25CC";
 
 /**
- * A combining mark shown on its own has nothing to attach to, so it lands on
- * whatever precedes it or floats loose. U+25CC is the base the standard uses to
- * display a mark in isolation.
+ * Add a dotted circle for combining characters to attach to if the codepoint is a
+ * combining character. U+25CC is the standard base mark.
  *
- * Brahmic shapers already insert one for a cluster with no base, but the
- * default shaper does not, so a Devanagari vowel sign got a circle and a
- * combining acute did not. Supplying the base makes every script agree. The
- * property escape reads the engine's own tables, which are the tables that
- * decide how the character renders.
+ * https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-24/#G8178
  */
-export function withBase(text: string): string {
-  return /^\p{M}/u.test(text) ? DOTTED_CIRCLE + text : text;
+export function renderCodepoint(codepoint: number): string {
+  const text = String.fromCodePoint(codepoint);
+  return isCombiningMark(codepoint) ? DOTTED_CIRCLE + text : text;
 }
+
+// TODO: there's also a dashed box convention for characters with no visible display, reserved characters, and non-characters
+// https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-24/#G8188
+// https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-24/#G8239
+// https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-24/#G8246
+// The last resort font may work well here? or, find a font that does.
+// in general, maybe we should provide fonts for character rendering because users are unlikely
+// to be able to render them all. how should we do this efficiently? font at-rules can help with
+// character selection. maybe unicode publishes fonts in general for this? all the official charts
+// show literally all the characters
+
+// TODO: instead of codepoints as tiles that wrap left-right, look at how this table
+// presents things: https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-2/#G289088
+// i like this a lot more. there's less complication with wrapped axes. change to this. (still
+// show the code points rendered)
