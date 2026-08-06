@@ -33,11 +33,11 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.5",
+    "@biomejs/biome": "^2.5.7",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/devtools-vite": "latest",
     "@tanstack/react-query-devtools": "^5.101.4",
-    "@tanstack/router-cli": "^1.167.22",
+    "@tanstack/router-cli": "^1.167.23",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
