@@ -2,15 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { type Example, examples, pickExamples } from "../lib/examples.ts";
 import { pageMeta } from "../lib/meta.ts";
+import {
+  buildSearch,
+  type Normalization,
+  normalizations,
+  parseSearch,
+} from "../lib/search.ts";
 import { codepointValues, type Grapheme, segment } from "../lib/text.ts";
 import { type Character, useCodepointInfo } from "../lib/unicode-query.ts";
 
 const DESCRIPTION = "See a text's Unicode graphemes and code points.";
-
-const normalizations = ["NFC", "NFD", "NFKC", "NFKD"] as const;
-type Normalization = (typeof normalizations)[number];
-
-type Search = { text?: string; norm?: Normalization };
 
 const BUTTON =
   "rounded-sm border border-line bg-raised px-3 py-1.5 text-ink-dim text-sm hover:border-line-strong hover:text-ink";
@@ -18,25 +19,9 @@ const BUTTON =
 const SECTION_HEADING =
   "font-semibold text-ink-dim text-xs uppercase tracking-[0.14em]";
 
-/**
- * The URL is the only state. Nothing copies it into a component, so a shared
- * link and a typed character take the same path.
- */
-function buildSearch(text: string, norm: Normalization | undefined): Search {
-  if (!text) {
-    return {};
-  }
-
-  return norm ? { text, norm } : { text };
-}
-
 export const Route = createFileRoute("/")({
   component: XRay,
-  validateSearch: (search: Record<string, unknown>): Search => {
-    const text = typeof search.text === "string" ? search.text : "";
-    const norm = normalizations.find((value) => value === search.norm);
-    return buildSearch(text, norm);
-  },
+  validateSearch: parseSearch,
   head: () => ({
     meta: pageMeta({
       title: "Unicode X-Ray",
